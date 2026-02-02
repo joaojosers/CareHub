@@ -49,13 +49,23 @@ CareHub é uma aplicação web moderna desenvolvida para PMEs que prestam servi�
 ## 📦 Estrutura do Projeto
 
 ```
-simulacion_laboral/
-├── index.html          # Estrutura HTML principal
-├── styles.css          # Estilos CSS com design moderno
-├── app.js              # Lógica da aplicação
-├── DOCUMENTO_TECNICO.md # Documentação técnica completa
-└── README.md           # Este arquivo
+CareHub/
+├── index.html              # Estrutura HTML principal
+├── styles.css              # Estilos CSS com design moderno
+├── app.js                  # Lógica da aplicação
+├── README.md               # Este arquivo
+├── DOCUMENTO_TECNICO.md    # Documentação técnica completa
+├── GUIA_RAPIDO.md          # Guia rápido de uso
+├── RESUMO_ENTREGA.md       # Resumo da entrega
+├── LICENSE                 # Licença MIT
+└── .gitignore              # Arquivos ignorados pelo Git
 ```
+
+## 🔗 Repositório GitHub
+
+Este projeto está disponível no GitHub:
+- **URL**: [https://github.com/joajosers/CareHub](https://github.com/joajosers/CareHub)
+- **Clone**: `git clone https://github.com/joajosers/CareHub.git`
 
 ## 🎨 Design e UX
 
@@ -81,12 +91,27 @@ Para testar o sistema, use as seguintes credenciais:
 
 ## 💻 Como Executar
 
-### Opção 1: Abrir diretamente no navegador
-1. Navegue até a pasta do projeto
-2. Abra o arquivo `index.html` em um navegador moderno
+### Opção 1: Clonar do GitHub (Recomendado)
+```bash
+# Clone o repositório
+git clone https://github.com/joajosers/CareHub.git
+
+# Entre na pasta do projeto
+cd CareHub
+
+# Abra o arquivo index.html no navegador
+open index.html  # macOS
+# ou
+start index.html  # Windows
+# ou
+xdg-open index.html  # Linux
+```
 
 ### Opção 2: Usar um servidor local
 ```bash
+# Navegue até a pasta do projeto
+cd CareHub
+
 # Usando Python 3
 python3 -m http.server 8000
 
@@ -95,6 +120,10 @@ npx serve
 
 # Acesse http://localhost:8000
 ```
+
+### Opção 3: Abrir diretamente (se já tiver os arquivos)
+1. Navegue até a pasta `CareHub`
+2. Abra o arquivo `index.html` em um navegador moderno
 
 ## 📱 Funcionalidades por Tipo de Usuário
 
