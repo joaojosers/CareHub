@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareHub - Sistema de Gestão de Cuidadores</title>
+    <meta name="description"
+        content="Sistema completo de gestão de acompanhantes, cuidadores e pacientes para PMEs de saúde">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="logo-container">
+                        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <h1>CareHub</h1>
+                    </div>
+                    <p class="subtitle">Sistema de Gestão de Cuidadores</p>
+                </div>
+
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Senha</label>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userType">Tipo de Usuário</label>
+                        <select id="userType" name="userType" required>
+                            <option value="">Selecione...</option>
+                            <option value="admin">Administrador</option>
+                            <option value="acompanhante">Acompanhante/Cuidador</option>
+                            <option value="familiar">Familiar</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large">
+                        <span>Entrar</span>
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </form>
+
+                <div class="login-footer">
+                    <a href="#" class="link" onclick="showRegisterScreen(); return false;">Primeiro acesso?
+                        Cadastre-se</a>
+                </div>
+
+                <div class="demo-credentials">
+                    <p><strong>Credenciais de Demo:</strong></p>
+                    <p>Email: admin@caresync.com | Senha: admin123</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Screen -->
+    <div id="registerScreen" class="screen">
+        <div class="register-container">
+            <div class="register-card">
+                <div class="register-header">
+                    <h2>Cadastro de Acompanhante</h2>
+                    <p>Preencha seus dados para solicitar acesso ao sistema</p>
+                </div>
+
+                <form id="registerForm" class="register-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regNome">Nome Completo *</label>
+                            <input type="text" id="regNome" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="regCPF">CPF *</label>
+                            <input type="text" id="regCPF" placeholder="000.000.000-00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regEmail">Email *</label>
+                            <input type="email" id="regEmail" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="regTelefone">Telefone *</label>
+                            <input type="tel" id="regTelefone" placeholder="(00) 00000-0000" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regSenha">Senha *</label>
+                            <input type="password" id="regSenha" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="regConfirmSenha">Confirmar Senha *</label>
+                            <input type="password" id="regConfirmSenha" required>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Dados Bancários</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="regBanco">Banco</label>
+                                <input type="text" id="regBanco" placeholder="Nome do banco">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regAgencia">Agência</label>
+                                <input type="text" id="regAgencia" placeholder="0000">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regConta">Conta</label>
+                                <input type="text" id="regConta" placeholder="00000-0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regMercadoPago">Mercado Pago (opcional)</label>
+                        <input type="email" id="regMercadoPago" placeholder="email@mercadopago.com">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="showLoginScreen()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Cadastrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboardScreen" class="screen">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span>CareHub</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard"
+                    onclick="switchView('dashboard'); return false;">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" />
+                        <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" />
+                        <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" />
+                        <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="#" class="nav-item" data-view="acompanhantes"
+                    onclick="switchView('acompanhantes'); return false;">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span>Acompanhantes</span>
+                </a>
+
+                <a href="#" class="nav-item" data-view="pacientes" onclick="switchView('pacientes'); return false;">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M23 11h-6"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span>Pacientes</span>
+                </a>
+
+                <a href="#" class="nav-item" data-view="plantoes" onclick="switchView('plantoes'); return false;">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <span>Plantões</span>
+                </a>
+
+                <a href="#" class="nav-item" data-view="pagamentos" onclick="switchView('pagamentos'); return false;">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" stroke-width="2" />
+                        <path d="M1 10h22" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <span>Pagamentos</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <span id="userInitials">AD</span>
+                    </div>
+                    <div class="user-info">
+                        <p class="user-name" id="userName">Administrador</p>
+                        <p class="user-role" id="userRole">Admin</p>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="logout()">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <div id="dashboardView" class="view active">
+                <div class="view-header">
+                    <div>
+                        <h1>Dashboard</h1>
+                        <p>Visão geral do sistema</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                                    stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Acompanhantes Ativos</p>
+                            <p class="stat-value" id="totalAcompanhantes">0</p>
+                            <p class="stat-change positive">+12% este mês</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
+                                    stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Pacientes Ativos</p>
+                            <p class="stat-value" id="totalPacientes">0</p>
+                            <p class="stat-change positive">+8% este mês</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" />
+                                <path d="M12 6v6l4 2" stroke="white" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Horas Este Mês</p>
+                            <p class="stat-value" id="totalHoras">0</p>
+                            <p class="stat-change positive">+15% vs mês anterior</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="white"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Pagamentos Pendentes</p>
+                            <p class="stat-value" id="totalPagamentos">R$ 0</p>
+                            <p class="stat-change">A processar</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Plantões Recentes</h2>
+                            <button class="btn btn-sm btn-secondary" onclick="switchView('plantoes')">Ver Todos</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Acompanhante</th>
+                                        <th>Paciente</th>
+                                        <th>Data</th>
+                                        <th>Horas</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentPlantoesTable">
+                                    <tr>
+                                        <td colspan="5" class="empty-state">Nenhum plantão registrado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Métricas Mensais</h2>
+                        </div>
+                        <div class="metrics-chart">
+                            <canvas id="metricsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acompanhantes View -->
+            <div id="acompanhantesView" class="view">
+                <div class="view-header">
+                    <div>
+                        <h1>Acompanhantes</h1>
+                        <p>Gestão de cuidadores cadastrados</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showAddAcompanhanteModal()">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                        Novo Acompanhante
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Telefone</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="acompanhantesTable">
+                                <tr>
+                                    <td colspan="6" class="empty-state">Nenhum acompanhante cadastrado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pacientes View -->
+            <div id="pacientesView" class="view">
+                <div class="view-header">
+                    <div>
+                        <h1>Pacientes</h1>
+                        <p>Gestão de pacientes cadastrados</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showAddPacienteModal()">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                        Novo Paciente
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Data Nascimento</th>
+                                    <th>Necessidades</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pacientesTable">
+                                <tr>
+                                    <td colspan="5" class="empty-state">Nenhum paciente cadastrado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plantões View -->
+            <div id="plantoesView" class="view">
+                <div class="view-header">
+                    <div>
+                        <h1>Plantões</h1>
+                        <p>Registro e gestão de plantões</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showAddPlantaoModal()">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                        Novo Plantão
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Acompanhante</th>
+                                    <th>Paciente</th>
+                                    <th>Data Início</th>
+                                    <th>Data Fim</th>
+                                    <th>Horas</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plantoesTable">
+                                <tr>
+                                    <td colspan="7" class="empty-state">Nenhum plantão registrado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagamentos View -->
+            <div id="pagamentosView" class="view">
+                <div class="view-header">
+                    <div>
+                        <h1>Pagamentos</h1>
+                        <p>Gestão de pagamentos e relatórios</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="processarPagamentos()">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Processar Pagamentos
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Relatório de Horas por Acompanhante</h2>
+                        <div class="filter-group">
+                            <select id="mesFilter" class="form-select">
+                                <option value="">Selecione o mês</option>
+                                <option value="2026-02">Fevereiro 2026</option>
+                                <option value="2026-01">Janeiro 2026</option>
+                                <option value="2025-12">Dezembro 2025</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="gerarRelatorio()">Gerar Relatório</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Acompanhante</th>
+                                    <th>Total de Horas</th>
+                                    <th>Valor/Hora</th>
+                                    <th>Total a Pagar</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pagamentosTable">
+                                <tr>
+                                    <td colspan="6" class="empty-state">Selecione um mês para gerar o relatório</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="modal-overlay">
+        <!-- Add Acompanhante Modal -->
+        <div id="addAcompanhanteModal" class="modal">
+            <div class="modal-header">
+                <h2>Novo Acompanhante</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="addAcompanhanteForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="acompNome">Nome Completo *</label>
+                        <input type="text" id="acompNome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="acompCPF">CPF *</label>
+                        <input type="text" id="acompCPF" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="acompEmail">Email *</label>
+                        <input type="email" id="acompEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="acompTelefone">Telefone *</label>
+                        <input type="tel" id="acompTelefone" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Add Paciente Modal -->
+        <div id="addPacienteModal" class="modal">
+            <div class="modal-header">
+                <h2>Novo Paciente</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="addPacienteForm" class="modal-form">
+                <div class="form-group">
+                    <label for="pacNome">Nome Completo *</label>
+                    <input type="text" id="pacNome" required>
+                </div>
+                <div class="form-group">
+                    <label for="pacDataNasc">Data de Nascimento *</label>
+                    <input type="date" id="pacDataNasc" required>
+                </div>
+                <div class="form-group">
+                    <label for="pacNecessidades">Necessidades Especiais</label>
+                    <textarea id="pacNecessidades" rows="4"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Add Plantão Modal -->
+        <div id="addPlantaoModal" class="modal">
+            <div class="modal-header">
+                <h2>Novo Plantão</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="addPlantaoForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="plantaoAcomp">Acompanhante *</label>
+                        <select id="plantaoAcomp" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="plantaoPac">Paciente *</label>
+                        <select id="plantaoPac" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="plantaoInicio">Data/Hora Início *</label>
+                        <input type="datetime-local" id="plantaoInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="plantaoFim">Data/Hora Fim *</label>
+                        <input type="datetime-local" id="plantaoFim" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="plantaoRelatorio">Relatório de Atividades</label>
+                    <textarea id="plantaoRelatorio" rows="4"
+                        placeholder="Descreva as atividades realizadas..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
