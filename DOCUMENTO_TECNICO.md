@@ -15,7 +15,7 @@ Desenvolver uma aplicação web que permita:
 - Visualização de métricas de gestão
 
 ### 1.3 Usuários do Sistema
-1. **Acompanhantes/Cuidadores**: Registro de plantões, horas trabalhadas e relatórios
+1. **Cuidadores**: Registro de plantões, horas trabalhadas e relatórios
 2. **Família do Paciente**: Visualização de informações e relatórios
 3. **Administração da PME**: Gestão completa, aprovações, pagamentos e métricas
 
@@ -23,7 +23,7 @@ Desenvolver uma aplicação web que permita:
 
 ### 2.1 Módulo de Cadastro de Usuários
 
-#### 2.1.1 Cadastro de Acompanhantes/Cuidadores
+#### 2.1.1 Cadastro de Cuidadores
 - Auto-registro com validação de documentos
 - Upload de documentos obrigatórios:
   - RG/CPF
