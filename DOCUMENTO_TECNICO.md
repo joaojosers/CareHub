@@ -8,7 +8,11 @@ Somos uma PME que atualmente realiza atividades de forma artesanal utilizando pl
 ### 1.2 Objetivo
 Desenvolver uma aplicação web que permita:
 - Cadastro (ABM - Alta, Baixa, Modificação) de Cuidadores e Pacientes
+<<<<<<< dev
 - Gestão de atividades e relatórios dos cuidadores para cada paciente
+=======
+- Gestão de atividades e relatórios dos acompanhantes/cuidadores para cada paciente
+>>>>>>> main
 - Geração de relatórios sobre quantidade de horas trabalhadas por cuidador por paciente para processamento de pagamentos mensais
 - Realização de pagamentos para contas bancárias ou Mercado Pago dos colaboradores através de gateway de pagamento confiável
 - Permitir que acompanhantes/cuidadores carreguem seus relatórios e horas trabalhadas por plantão realizado
@@ -183,7 +187,7 @@ Desenvolver uma aplicação web que permita:
 
 ## 5. Roadmap de Desenvolvimento
 
-### 5.1 Fase 1 - MVP (2-3 semanas)
+### 5.1 Fase 1 - MVP (1º semana)
 - [ ] Sistema de autenticação básico
 - [ ] CRUD de cuidadores
 - [ ] CRUD de pacientes
@@ -191,19 +195,20 @@ Desenvolver uma aplicação web que permita:
 - [ ] Cálculo de horas
 - [ ] Dashboard básico
 
-### 5.2 Fase 2 - Funcionalidades Avançadas (3-4 semanas)
+### 5.2 Fase 2 - Funcionalidades Avançadas (2º semana)
 - [ ] Sistema de aprovação de documentos
 - [ ] Relatórios detalhados
 - [ ] Exportação de dados
 - [ ] Notificações por email
+- [ ] Módulo de leitura/consulta de familiar
 
-### 5.3 Fase 3 - Integração de Pagamentos (2-3 semanas)
+### 5.3 Fase 3 - Integração de Pagamentos (3º semana)
 - [ ] Integração com gateway de pagamento
 - [ ] Integração com Mercado Pago
 - [ ] Histórico de transações
 - [ ] Comprovantes automáticos
 
-### 5.4 Fase 4 - Otimizações (2 semanas)
+### 5.4 Fase 4 - Otimizações (4º semanas)
 - [ ] Melhorias de performance
 - [ ] Testes de segurança
 - [ ] Documentação completa
@@ -216,6 +221,7 @@ Desenvolver uma aplicação web que permita:
 2. Cadastro de usuários e pacientes
 3. Registro de plantões e horas
 4. Dashboard com métricas básicas
+5. Familiar visualiza relatórios e status
 
 ### 6.2 Funcionalidades Futuras
 - Aplicativo mobile nativo
@@ -228,6 +234,10 @@ Desenvolver uma aplicação web que permita:
 
 - **ABM**: Alta, Baixa, Modificação (CRUD em português)
 - **Cuidador**: Profissional que presta cuidados ao paciente
+<<<<<<< dev
 - **Plantão**: Período de trabalho do cuidador
+=======
+- **Plantão**: Período de trabalho do acompanhante
+>>>>>>> main
 - **PME**: Pequena e Média Empresa
 - **Gateway de Pagamento**: Sistema que processa pagamentos online
