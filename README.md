@@ -1,4 +1,4 @@
-# CareHub - Sistema de Gestão de Acompanhantes e Pacientes
+# CareHub - Sistema de Gestão de Cuidadores e Pacientes
 
 ## 📋 Visão Geral
 
@@ -7,7 +7,7 @@ CareHub é uma aplicação web moderna desenvolvida para PMEs que prestam servi�
 ## 🎯 Objetivos do Projeto
 
 - **Digitalizar processos**: Substituir planilhas Excel e WhatsApp por um sistema centralizado
-- **Gestão de pessoas**: Cadastro e gerenciamento de acompanhantes/cuidadores e pacientes
+- **Gestão de pessoas**: Cadastro e gerenciamento de cuidadores e pacientes
 - **Controle de horas**: Registro e aprovação de plantões com cálculo automático de horas
 - **Pagamentos**: Relatórios detalhados para processamento de pagamentos mensais
 - **Métricas**: Dashboard com indicadores de gestão em tempo real
@@ -15,10 +15,10 @@ CareHub é uma aplicação web moderna desenvolvida para PMEs que prestam servi�
 ## ✨ Funcionalidades Principais
 
 ### 1. Gestão de Usuários
-- ✅ Auto-cadastro de acompanhantes/cuidadores
+- ✅ Auto-cadastro de cuidadores
 - ✅ Cadastro de pacientes
 - ✅ Sistema de aprovação de documentos
-- ✅ Três níveis de acesso: Administrador, Acompanhante, Familiar
+- ✅ Três níveis de acesso: Administrador, Cuidador, Familiar
 
 ### 2. Gestão de Plantões
 - ✅ Registro de plantões com data/hora início e fim
@@ -27,13 +27,13 @@ CareHub é uma aplicação web moderna desenvolvida para PMEs que prestam servi�
 - ✅ Sistema de aprovação de plantões
 
 ### 3. Controle Financeiro
-- ✅ Relatórios de horas por acompanhante
+- ✅ Relatórios de horas por cuidador
 - ✅ Cálculo automático de valores a pagar
 - ✅ Filtros por período (mensal)
 - ✅ Preparado para integração com gateway de pagamento
 
 ### 4. Dashboard e Métricas
-- ✅ Total de acompanhantes ativos
+- ✅ Total de cuidadores ativos
 - ✅ Total de pacientes ativos
 - ✅ Horas trabalhadas no mês
 - ✅ Pagamentos pendentes
@@ -85,7 +85,7 @@ Para testar o sistema, use as seguintes credenciais:
 - Tipo: Administrador
 
 **Dados de Demonstração:**
-- 3 acompanhantes pré-cadastrados
+- 3 cuidadores pré-cadastrados
 - 3 pacientes pré-cadastrados
 - 5 plantões de exemplo
 
@@ -129,13 +129,13 @@ npx serve
 
 ### Administrador
 - ✅ Visualizar dashboard completo
-- ✅ Gerenciar acompanhantes (CRUD)
+- ✅ Gerenciar cuidadores (CRUD)
 - ✅ Gerenciar pacientes (CRUD)
 - ✅ Aprovar/rejeitar plantões
 - ✅ Gerar relatórios de pagamento
 - ✅ Processar pagamentos
 
-### Acompanhante/Cuidador
+### Cuidador
 - ✅ Registrar plantões
 - ✅ Adicionar relatórios de atividades
 - ✅ Visualizar histórico de plantões
@@ -148,9 +148,9 @@ npx serve
 
 ## 🔄 Fluxo de Trabalho
 
-1. **Cadastro**: Acompanhante se cadastra no sistema
+1. **Cadastro**: Cuidador se cadastra no sistema
 2. **Aprovação**: Administrador aprova o cadastro
-3. **Registro**: Acompanhante registra plantões realizados
+3. **Registro**: Cuidador registra plantões realizados
 4. **Aprovação**: Administrador aprova plantões
 5. **Pagamento**: Sistema gera relatório mensal para pagamento
 6. **Processamento**: Pagamentos são processados via gateway
@@ -159,7 +159,7 @@ npx serve
 
 O sistema oferece:
 - Total de horas trabalhadas por período
-- Custo total por acompanhante
+- Custo total por cuidador
 - Número de plantões por paciente
 - Taxa de aprovação de plantões
 - Projeções de gastos mensais

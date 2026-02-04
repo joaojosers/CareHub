@@ -8,7 +8,11 @@ Somos uma PME que atualmente realiza atividades de forma artesanal utilizando pl
 ### 1.2 Objetivo
 Desenvolver uma aplicação web que permita:
 - Cadastro (ABM - Alta, Baixa, Modificação) de Cuidadores e Pacientes
+<<<<<<< dev
+- Gestão de atividades e relatórios dos cuidadores para cada paciente
+=======
 - Gestão de atividades e relatórios dos acompanhantes/cuidadores para cada paciente
+>>>>>>> main
 - Geração de relatórios sobre quantidade de horas trabalhadas por cuidador por paciente para processamento de pagamentos mensais
 - Realização de pagamentos para contas bancárias ou Mercado Pago dos colaboradores através de gateway de pagamento confiável
 - Permitir que acompanhantes/cuidadores carreguem seus relatórios e horas trabalhadas por plantão realizado
@@ -49,7 +53,7 @@ Desenvolver uma aplicação web que permita:
 #### 2.2.1 Registro de Plantões
 - Data e horário de início/fim
 - Paciente atendido
-- Acompanhante responsável
+- Cuidador responsável
 - Tipo de plantão (12h, 24h, etc.)
 - Status (pendente, aprovado, rejeitado)
 
@@ -139,7 +143,7 @@ Desenvolver uma aplicação web que permita:
 ```javascript
 {
   id: string,
-  tipo: 'acompanhante' | 'familiar' | 'admin',
+  tipo: 'cuidador' | 'familiar' | 'admin',
   nome: string,
   email: string,
   telefone: string,
@@ -169,7 +173,7 @@ Desenvolver uma aplicação web que permita:
 ```javascript
 {
   id: string,
-  acompanhanteId: string,
+  cuidadorId: string,
   pacienteId: string,
   dataInicio: Date,
   dataFim: Date,
@@ -230,6 +234,10 @@ Desenvolver uma aplicação web que permita:
 
 - **ABM**: Alta, Baixa, Modificação (CRUD em português)
 - **Cuidador**: Profissional que presta cuidados ao paciente
+<<<<<<< dev
+- **Plantão**: Período de trabalho do cuidador
+=======
 - **Plantão**: Período de trabalho do acompanhante
+>>>>>>> main
 - **PME**: Pequena e Média Empresa
 - **Gateway de Pagamento**: Sistema que processa pagamentos online

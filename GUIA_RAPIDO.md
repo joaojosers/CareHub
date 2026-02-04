@@ -16,16 +16,16 @@ Use as credenciais de demonstração:
 ### 3. Explorar o Dashboard
 
 Após o login, você verá:
-- **Estatísticas**: Acompanhantes ativos, pacientes, horas do mês, pagamentos pendentes
+- **Estatísticas**: Cuidadores ativos, pacientes, horas do mês, pagamentos pendentes
 - **Plantões Recentes**: Lista dos últimos plantões registrados
 - **Menu Lateral**: Navegação entre as diferentes seções
 
 ## 📋 Principais Operações
 
-### Cadastrar Novo Acompanhante
+### Cadastrar Novo Cuidador
 
-1. Clique em "Acompanhantes" no menu lateral
-2. Clique no botão "Novo Acompanhante"
+1. Clique em "Cuidadores" no menu lateral
+2. Clique no botão "Novo Cuidador"
 3. Preencha os dados obrigatórios:
    - Nome completo
    - CPF
@@ -69,7 +69,7 @@ Após o login, você verá:
 1. Clique em "Pagamentos" no menu lateral
 2. Selecione o mês desejado no filtro
 3. Clique em "Gerar Relatório"
-4. Visualize o total de horas e valores por acompanhante
+4. Visualize o total de horas e valores por cuidador
 5. Use o botão "Processar" para simular o pagamento
 
 ## 🎯 Casos de Uso Práticos
@@ -124,7 +124,7 @@ Após o login, você verá:
 ✅ **Gere relatórios mensais** no início de cada mês
 ✅ **Mantenha dados de contato atualizados**
 
-### Para Acompanhantes
+### Para Cuidadores
 
 ✅ **Registre plantões imediatamente** após concluí-los
 ✅ **Seja detalhado nos relatórios** de atividades
@@ -176,8 +176,8 @@ Após o login, você verá:
 
 ## 🎓 Glossário
 
-- **Acompanhante/Cuidador**: Profissional que presta cuidados ao paciente
-- **Plantão**: Período de trabalho do acompanhante
+- **Cuidador**: Profissional que presta cuidados ao paciente
+- **Plantão**: Período de trabalho do cuidador
 - **ABM**: Alta, Baixa, Modificação (criar, deletar, editar)
 - **Dashboard**: Painel principal com visão geral
 - **Gateway de Pagamento**: Sistema para processar pagamentos online
