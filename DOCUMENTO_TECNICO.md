@@ -8,11 +8,7 @@ Somos uma PME que atualmente realiza atividades de forma artesanal utilizando pl
 ### 1.2 Objetivo
 Desenvolver uma aplicação web que permita:
 - Cadastro (ABM - Alta, Baixa, Modificação) de Cuidadores e Pacientes
-<<<<<<< dev
 - Gestão de atividades e relatórios dos cuidadores para cada paciente
-=======
-- Gestão de atividades e relatórios dos acompanhantes/cuidadores para cada paciente
->>>>>>> main
 - Geração de relatórios sobre quantidade de horas trabalhadas por cuidador por paciente para processamento de pagamentos mensais
 - Realização de pagamentos para contas bancárias ou Mercado Pago dos colaboradores através de gateway de pagamento confiável
 - Permitir que acompanhantes/cuidadores carreguem seus relatórios e horas trabalhadas por plantão realizado
@@ -139,7 +135,7 @@ Desenvolver uma aplicação web que permita:
 
 ### 4.2 Estrutura de Dados
 
-#### 4.2.1 Usuários
+#### 4.2.1 Usuários (Base)
 ```javascript
 {
   id: string,
@@ -149,14 +145,24 @@ Desenvolver uma aplicação web que permita:
   telefone: string,
   cpf: string,
   status: 'pendente' | 'aprovado' | 'rejeitado',
-  documentos: Array<{tipo: string, url: string}>,
-  dadosBancarios: {banco: string, agencia: string, conta: string},
-  mercadoPago: string,
   dataCadastro: Date
 }
 ```
 
-#### 4.2.2 Pacientes
+> **Nota**: O perfil **Admin** utiliza exclusivamente a estrutura base acima, sem necessidade de campos adicionais no MVP.
+
+#### 4.2.2 Detalhes de Cuidadores (Extensão de Usuário)
+```javascript
+{
+  userId: string,
+  documentos: Array<{tipo: string, url: string}>,
+  dadosBancarios: {banco: string, agencia: string, conta: string},
+  mercadoPago: string,
+  especialidades: string[]
+}
+```
+
+#### 4.2.3 Pacientes
 ```javascript
 {
   id: string,
@@ -169,7 +175,7 @@ Desenvolver uma aplicação web que permita:
 }
 ```
 
-#### 4.2.3 Plantões
+#### 4.2.4 Plantões
 ```javascript
 {
   id: string,
@@ -182,6 +188,16 @@ Desenvolver uma aplicação web que permita:
   status: 'pendente' | 'aprovado' | 'rejeitado',
   valorPago: number,
   dataCriacao: Date
+}
+```
+
+#### 4.2.5 Familiares (Vínculo)
+```javascript
+{
+  userId: string,
+  pacienteId: string,
+  parentesco: string, // 'Filho(a)', 'Cônjuge', 'Irmão(ã)', etc.
+  isResponsavelFinanceiro: boolean
 }
 ```
 
@@ -234,10 +250,6 @@ Desenvolver uma aplicação web que permita:
 
 - **ABM**: Alta, Baixa, Modificação (CRUD em português)
 - **Cuidador**: Profissional que presta cuidados ao paciente
-<<<<<<< dev
 - **Plantão**: Período de trabalho do cuidador
-=======
-- **Plantão**: Período de trabalho do acompanhante
->>>>>>> main
 - **PME**: Pequena e Média Empresa
 - **Gateway de Pagamento**: Sistema que processa pagamentos online

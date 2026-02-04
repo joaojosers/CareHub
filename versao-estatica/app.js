@@ -326,7 +326,12 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
         // Update user info in sidebar
         const user = store.currentUser;
         document.getElementById('userName').textContent = user.nome;
-        document.getElementById('userRole').textContent = user.tipo === 'cuidador' ? 'Cuidador' : user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
+        const roleMap = {
+            'admin': 'Administrador',
+            'cuidador': 'Cuidador',
+            'familiar': 'Familiar'
+        };
+        document.getElementById('userRole').textContent = roleMap[user.tipo] || user.tipo;
 
         const initials = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         document.getElementById('userInitials').textContent = initials;
