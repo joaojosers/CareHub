@@ -1,4 +1,4 @@
-# Documento Técnico - Sistema de Gestão de Acompanhantes e Pacientes
+# Documento Técnico - Sistema de Gestão de Cuidadores e Pacientes
 
 ## 1. Visão Geral do Projeto
 
@@ -7,15 +7,15 @@ Somos uma PME que atualmente realiza atividades de forma artesanal utilizando pl
 
 ### 1.2 Objetivo
 Desenvolver uma aplicação web que permita:
-- Cadastro (ABM - Alta, Baixa, Modificação) de Acompanhantes/Cuidadores e Pacientes
-- Gestão de atividades e relatórios dos acompanhantes/cuidadores para cada paciente
-- Geração de relatórios sobre quantidade de horas trabalhadas por acompanhante/cuidador por paciente para processamento de pagamentos mensais
+- Cadastro (ABM - Alta, Baixa, Modificação) de Cuidadores e Pacientes
+- Gestão de atividades e relatórios dos cuidadores para cada paciente
+- Geração de relatórios sobre quantidade de horas trabalhadas por cuidador por paciente para processamento de pagamentos mensais
 - Realização de pagamentos para contas bancárias ou Mercado Pago dos colaboradores através de gateway de pagamento confiável
 - Permitir que acompanhantes/cuidadores carreguem seus relatórios e horas trabalhadas por plantão realizado
 - Visualização de métricas de gestão
 
 ### 1.3 Usuários do Sistema
-1. **Acompanhantes/Cuidadores**: Registro de plantões, horas trabalhadas e relatórios
+1. **Cuidadores**: Registro de plantões, horas trabalhadas e relatórios
 2. **Família do Paciente**: Visualização de informações e relatórios
 3. **Administração da PME**: Gestão completa, aprovações, pagamentos e métricas
 
@@ -23,7 +23,7 @@ Desenvolver uma aplicação web que permita:
 
 ### 2.1 Módulo de Cadastro de Usuários
 
-#### 2.1.1 Cadastro de Acompanhantes/Cuidadores
+#### 2.1.1 Cadastro de Cuidadores
 - Auto-registro com validação de documentos
 - Upload de documentos obrigatórios:
   - RG/CPF
@@ -49,7 +49,7 @@ Desenvolver uma aplicação web que permita:
 #### 2.2.1 Registro de Plantões
 - Data e horário de início/fim
 - Paciente atendido
-- Acompanhante responsável
+- Cuidador responsável
 - Tipo de plantão (12h, 24h, etc.)
 - Status (pendente, aprovado, rejeitado)
 
@@ -139,7 +139,7 @@ Desenvolver uma aplicação web que permita:
 ```javascript
 {
   id: string,
-  tipo: 'acompanhante' | 'familiar' | 'admin',
+  tipo: 'cuidador' | 'familiar' | 'admin',
   nome: string,
   email: string,
   telefone: string,
@@ -169,7 +169,7 @@ Desenvolver uma aplicação web que permita:
 ```javascript
 {
   id: string,
-  acompanhanteId: string,
+  cuidadorId: string,
   pacienteId: string,
   dataInicio: Date,
   dataFim: Date,
@@ -185,7 +185,7 @@ Desenvolver uma aplicação web que permita:
 
 ### 5.1 Fase 1 - MVP (2-3 semanas)
 - [ ] Sistema de autenticação básico
-- [ ] CRUD de acompanhantes
+- [ ] CRUD de cuidadores
 - [ ] CRUD de pacientes
 - [ ] Registro de plantões
 - [ ] Cálculo de horas
@@ -227,7 +227,7 @@ Desenvolver uma aplicação web que permita:
 ## 7. Glossário
 
 - **ABM**: Alta, Baixa, Modificação (CRUD em português)
-- **Acompanhante/Cuidador**: Profissional que presta cuidados ao paciente
-- **Plantão**: Período de trabalho do acompanhante
+- **Cuidador**: Profissional que presta cuidados ao paciente
+- **Plantão**: Período de trabalho do cuidador
 - **PME**: Pequena e Média Empresa
 - **Gateway de Pagamento**: Sistema que processa pagamentos online

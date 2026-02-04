@@ -2,7 +2,7 @@
 class DataStore {
     constructor() {
         this.users = JSON.parse(localStorage.getItem('users')) || [];
-        this.acompanhantes = JSON.parse(localStorage.getItem('acompanhantes')) || [];
+        this.cuidadores = JSON.parse(localStorage.getItem('cuidadores')) || [];
         this.pacientes = JSON.parse(localStorage.getItem('pacientes')) || [];
         this.plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
         this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
@@ -27,16 +27,16 @@ class DataStore {
             dataCadastro: new Date().toISOString()
         });
 
-        // Demo acompanhantes
-        const acompanhantesDemo = [
+        // Demo cuidadores
+        const cuidadoresDemo = [
             { nome: 'Maria Silva', cpf: '111.111.111-11', email: 'maria@email.com', telefone: '(11) 98888-8888' },
             { nome: 'João Santos', cpf: '222.222.222-22', email: 'joao@email.com', telefone: '(11) 97777-7777' },
             { nome: 'Ana Costa', cpf: '333.333.333-33', email: 'ana@email.com', telefone: '(11) 96666-6666' }
         ];
 
-        acompanhantesDemo.forEach(acomp => {
+        cuidadoresDemo.forEach(acomp => {
             const id = this.generateId();
-            this.acompanhantes.push({
+            this.cuidadores.push({
                 id,
                 ...acomp,
                 status: 'aprovado',
@@ -46,8 +46,8 @@ class DataStore {
 
             this.users.push({
                 id: this.generateId(),
-                tipo: 'acompanhante',
-                acompanhanteId: id,
+                tipo: 'cuidador',
+                cuidadorId: id,
                 nome: acomp.nome,
                 email: acomp.email,
                 senha: '123456',
@@ -87,7 +87,7 @@ class DataStore {
 
             this.plantoes.push({
                 id: this.generateId(),
-                acompanhanteId: this.acompanhantes[i % this.acompanhantes.length].id,
+                cuidadorId: this.cuidadores[i % this.cuidadores.length].id,
                 pacienteId: this.pacientes[i % this.pacientes.length].id,
                 dataInicio: inicio.toISOString(),
                 dataFim: fim.toISOString(),
@@ -108,7 +108,7 @@ class DataStore {
 
     save() {
         localStorage.setItem('users', JSON.stringify(this.users));
-        localStorage.setItem('acompanhantes', JSON.stringify(this.acompanhantes));
+        localStorage.setItem('cuidadores', JSON.stringify(this.cuidadores));
         localStorage.setItem('pacientes', JSON.stringify(this.pacientes));
         localStorage.setItem('plantoes', JSON.stringify(this.plantoes));
         localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
@@ -135,30 +135,30 @@ class DataStore {
         this.save();
     }
 
-    addAcompanhante(data) {
-        const acompanhante = {
+    addCuidador(data) {
+        const cuidador = {
             id: this.generateId(),
             ...data,
             status: 'aprovado',
             dataCadastro: new Date().toISOString()
         };
-        this.acompanhantes.push(acompanhante);
+        this.cuidadores.push(cuidador);
         this.save();
-        return acompanhante;
+        return cuidador;
     }
 
-    updateAcompanhante(id, data) {
-        const index = this.acompanhantes.findIndex(a => a.id === id);
+    updateCuidador(id, data) {
+        const index = this.cuidadores.findIndex(a => a.id === id);
         if (index !== -1) {
-            this.acompanhantes[index] = { ...this.acompanhantes[index], ...data };
+            this.cuidadores[index] = { ...this.cuidadores[index], ...data };
             this.save();
             return true;
         }
         return false;
     }
 
-    deleteAcompanhante(id) {
-        this.acompanhantes = this.acompanhantes.filter(a => a.id !== id);
+    deleteCuidador(id) {
+        this.cuidadores = this.cuidadores.filter(a => a.id !== id);
         this.save();
     }
 
@@ -223,16 +223,16 @@ class DataStore {
         this.save();
     }
 
-    getAcompanhanteById(id) {
-        return this.acompanhantes.find(a => a.id === id);
+    getCuidadorById(id) {
+        return this.cuidadores.find(a => a.id === id);
     }
 
     getPacienteById(id) {
         return this.pacientes.find(p => p.id === id);
     }
 
-    getPlantoesByAcompanhante(acompanhanteId) {
-        return this.plantoes.filter(p => p.acompanhanteId === acompanhanteId);
+    getPlantoesByCuidador(cuidadorId) {
+        return this.plantoes.filter(p => p.cuidadorId === cuidadorId);
     }
 
     getPlantoesByPaciente(pacienteId) {
@@ -299,8 +299,8 @@ function switchView(viewName) {
         case 'dashboard':
             updateDashboard();
             break;
-        case 'acompanhantes':
-            updateAcompanhantesTable();
+        case 'cuidadores':
+            updateCuidadoresTable();
             break;
         case 'pacientes':
             updatePacientesTable();
@@ -326,7 +326,7 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
         // Update user info in sidebar
         const user = store.currentUser;
         document.getElementById('userName').textContent = user.nome;
-        document.getElementById('userRole').textContent = user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
+        document.getElementById('userRole').textContent = user.tipo === 'cuidador' ? 'Cuidador' : user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1);
 
         const initials = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         document.getElementById('userInitials').textContent = initials;
@@ -362,11 +362,11 @@ document.getElementById('registerForm').addEventListener('submit', (e) => {
         mercadoPago: document.getElementById('regMercadoPago').value
     };
 
-    store.addAcompanhante(userData);
+    store.addCuidador(userData);
 
     store.users.push({
         id: store.generateId(),
-        tipo: 'acompanhante',
+        tipo: 'cuidador',
         nome: userData.nome,
         email: userData.email,
         senha: senha,
@@ -390,8 +390,8 @@ function logout() {
 // Update Dashboard
 function updateDashboard() {
     // Update stats
-    document.getElementById('totalAcompanhantes').textContent =
-        store.acompanhantes.filter(a => a.status === 'aprovado').length;
+    document.getElementById('totalCuidadores').textContent =
+        store.cuidadores.filter(a => a.status === 'aprovado').length;
 
     document.getElementById('totalPacientes').textContent =
         store.pacientes.filter(p => p.status === 'ativo').length;
@@ -410,13 +410,13 @@ function updateDashboard() {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum plantão registrado</td></tr>';
     } else {
         tbody.innerHTML = recentPlantoes.map(plantao => {
-            const acompanhante = store.getAcompanhanteById(plantao.acompanhanteId);
+            const cuidador = store.getCuidadorById(plantao.cuidadorId);
             const paciente = store.getPacienteById(plantao.pacienteId);
             const data = new Date(plantao.dataInicio).toLocaleDateString('pt-BR');
 
             return `
                 <tr>
-                    <td>${acompanhante?.nome || 'N/A'}</td>
+                    <td>${cuidador?.nome || 'N/A'}</td>
                     <td>${paciente?.nome || 'N/A'}</td>
                     <td>${data}</td>
                     <td>${plantao.horasTrabalhadas}h</td>
@@ -427,14 +427,14 @@ function updateDashboard() {
     }
 }
 
-// Update Acompanhantes Table
-function updateAcompanhantesTable() {
-    const tbody = document.getElementById('acompanhantesTable');
+// Update Cuidadores Table
+function updateCuidadoresTable() {
+    const tbody = document.getElementById('cuidadoresTable');
 
-    if (store.acompanhantes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum acompanhante cadastrado</td></tr>';
+    if (store.cuidadores.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum cuidador cadastrado</td></tr>';
     } else {
-        tbody.innerHTML = store.acompanhantes.map(acomp => `
+        tbody.innerHTML = store.cuidadores.map(acomp => `
             <tr>
                 <td>${acomp.nome}</td>
                 <td>${acomp.cpf}</td>
@@ -443,12 +443,12 @@ function updateAcompanhantesTable() {
                 <td><span class="status-badge ${acomp.status}">${getStatusText(acomp.status)}</span></td>
                 <td>
                     <div class="action-buttons">
-                        <button class="btn-action edit" onclick="editAcompanhante('${acomp.id}')" title="Editar">
+                        <button class="btn-action edit" onclick="editCuidador('${acomp.id}')" title="Editar">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </button>
-                        <button class="btn-action delete" onclick="deleteAcompanhante('${acomp.id}')" title="Excluir">
+                        <button class="btn-action delete" onclick="deleteCuidador('${acomp.id}')" title="Excluir">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -503,14 +503,14 @@ function updatePlantoesTable() {
         tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum plantão registrado</td></tr>';
     } else {
         tbody.innerHTML = store.plantoes.map(plantao => {
-            const acompanhante = store.getAcompanhanteById(plantao.acompanhanteId);
+            const cuidador = store.getCuidadorById(plantao.cuidadorId);
             const paciente = store.getPacienteById(plantao.pacienteId);
             const dataInicio = new Date(plantao.dataInicio).toLocaleString('pt-BR');
             const dataFim = new Date(plantao.dataFim).toLocaleString('pt-BR');
 
             return `
                 <tr>
-                    <td>${acompanhante?.nome || 'N/A'}</td>
+                    <td>${cuidador?.nome || 'N/A'}</td>
                     <td>${paciente?.nome || 'N/A'}</td>
                     <td>${dataInicio}</td>
                     <td>${dataFim}</td>
@@ -551,13 +551,13 @@ function closeModal() {
     });
 }
 
-// Add Acompanhante
-function showAddAcompanhanteModal() {
-    document.getElementById('addAcompanhanteForm').reset();
-    showModal('addAcompanhanteModal');
+// Add Cuidador
+function showAddCuidadorModal() {
+    document.getElementById('addCuidadorForm').reset();
+    showModal('addCuidadorModal');
 }
 
-document.getElementById('addAcompanhanteForm').addEventListener('submit', (e) => {
+document.getElementById('addCuidadorForm').addEventListener('submit', (e) => {
     e.preventDefault();
 
     const data = {
@@ -567,9 +567,9 @@ document.getElementById('addAcompanhanteForm').addEventListener('submit', (e) =>
         telefone: document.getElementById('acompTelefone').value
     };
 
-    store.addAcompanhante(data);
+    store.addCuidador(data);
     closeModal();
-    updateAcompanhantesTable();
+    updateCuidadorsTable();
     updateDashboard();
 });
 
@@ -603,7 +603,7 @@ function showAddPlantaoModal() {
     const pacSelect = document.getElementById('plantaoPac');
 
     acompSelect.innerHTML = '<option value="">Selecione...</option>' +
-        store.acompanhantes.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        store.cuidadores.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
 
     pacSelect.innerHTML = '<option value="">Selecione...</option>' +
         store.pacientes.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
@@ -615,7 +615,7 @@ document.getElementById('addPlantaoForm').addEventListener('submit', (e) => {
     e.preventDefault();
 
     const data = {
-        acompanhanteId: document.getElementById('plantaoAcomp').value,
+        cuidadorId: document.getElementById('plantaoAcomp').value,
         pacienteId: document.getElementById('plantaoPac').value,
         dataInicio: document.getElementById('plantaoInicio').value,
         dataFim: document.getElementById('plantaoFim').value,
@@ -629,10 +629,10 @@ document.getElementById('addPlantaoForm').addEventListener('submit', (e) => {
 });
 
 // Delete functions
-function deleteAcompanhante(id) {
-    if (confirm('Tem certeza que deseja excluir este acompanhante?')) {
-        store.deleteAcompanhante(id);
-        updateAcompanhantesTable();
+function deleteCuidador(id) {
+    if (confirm('Tem certeza que deseja excluir este cuidador?')) {
+        store.deleteCuidador(id);
+        updateCuidadorsTable();
         updateDashboard();
     }
 }
@@ -669,7 +669,7 @@ function aprovarPlantao(id) {
 }
 
 // Edit functions (simplified for MVP)
-function editAcompanhante(id) {
+function editCuidador(id) {
     alert('Funcionalidade de edição será implementada na próxima versão.');
 }
 
@@ -695,17 +695,17 @@ function gerarRelatorio() {
         return plantaoDate >= firstDay && plantaoDate <= lastDay && p.status === 'aprovado';
     });
 
-    // Group by acompanhante
+    // Group by cuidador
     const relatorio = {};
     plantoesMes.forEach(plantao => {
-        if (!relatorio[plantao.acompanhanteId]) {
-            relatorio[plantao.acompanhanteId] = {
+        if (!relatorio[plantao.cuidadorId]) {
+            relatorio[plantao.cuidadorId] = {
                 totalHoras: 0,
                 totalPagar: 0
             };
         }
-        relatorio[plantao.acompanhanteId].totalHoras += plantao.horasTrabalhadas;
-        relatorio[plantao.acompanhanteId].totalPagar += plantao.valorPago;
+        relatorio[plantao.cuidadorId].totalHoras += plantao.horasTrabalhadas;
+        relatorio[plantao.cuidadorId].totalPagar += plantao.valorPago;
     });
 
     const tbody = document.getElementById('pagamentosTable');
@@ -715,7 +715,7 @@ function gerarRelatorio() {
         tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum plantão aprovado neste período</td></tr>';
     } else {
         tbody.innerHTML = Object.entries(relatorio).map(([acompId, data]) => {
-            const acomp = store.getAcompanhanteById(acompId);
+            const acomp = store.getCuidadorById(acompId);
             return `
                 <tr>
                     <td>${acomp?.nome || 'N/A'}</td>
@@ -734,8 +734,8 @@ function gerarRelatorio() {
     }
 }
 
-function processarPagamento(acompanhanteId, valor) {
-    const acomp = store.getAcompanhanteById(acompanhanteId);
+function processarPagamento(cuidadorId, valor) {
+    const acomp = store.getCuidadorById(cuidadorId);
     alert(`Pagamento de R$ ${valor.toFixed(2)} para ${acomp.nome} será processado.\n\nEm produção, isso seria integrado com um gateway de pagamento real.`);
 }
 

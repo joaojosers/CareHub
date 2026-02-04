@@ -31,12 +31,12 @@
 
 #### Arquivos Desenvolvidos
 
-1. **index.html** (500+ linhas)
+3. **index.html** (500+ linhas)
    - Estrutura HTML5 semântica
    - Tela de login com validação
-   - Tela de cadastro de acompanhantes
+   - Tela de cadastro de cuidadores
    - Dashboard completo com métricas
-   - 5 views principais (Dashboard, Acompanhantes, Pacientes, Plantões, Pagamentos)
+   - 5 views principais (Dashboard, Cuidadores, Pacientes, Plantões, Pagamentos)
    - Modais para CRUD de todas as entidades
    - Design responsivo
 
@@ -72,10 +72,10 @@
 - ✅ Logout
 - ✅ Persistência de sessão
 
-### Gestão de Acompanhantes
-- ✅ Listar todos os acompanhantes
-- ✅ Adicionar novo acompanhante
-- ✅ Excluir acompanhante
+### Gestão de Cuidadores
+- ✅ Listar todos os cuidadores
+- ✅ Adicionar novo cuidador
+- ✅ Excluir cuidador
 - ✅ Visualizar status (aprovado/pendente)
 - ✅ Armazenar dados bancários
 
@@ -103,7 +103,7 @@
 - ✅ Interface para processar pagamentos
 
 ### Dashboard e Métricas
-- ✅ Total de acompanhantes ativos
+- ✅ Total de cuidadores ativos
 - ✅ Total de pacientes ativos
 - ✅ Horas trabalhadas no mês
 - ✅ Pagamentos pendentes
@@ -140,7 +140,7 @@ O sistema vem pré-carregado com:
   - **Email**: admin@carehub.com
   - Senha: admin123
 
-- **3 acompanhantes**
+- **3 cuidadores**
   - Maria Silva
   - João Santos
   - Ana Costa

@@ -47,7 +47,7 @@
                         <select id="userType" name="userType" required>
                             <option value="">Selecione...</option>
                             <option value="admin">Administrador</option>
-                            <option value="acompanhante">Acompanhante/Cuidador</option>
+                            <option value="cuidador">Cuidador</option>
                             <option value="familiar">Familiar</option>
                         </select>
                     </div>
@@ -79,7 +79,7 @@
         <div class="register-container">
             <div class="register-card">
                 <div class="register-header">
-                    <h2>Cadastro de Acompanhante</h2>
+                    <h2>Cadastro de Cuidador</h2>
                     <p>Preencha seus dados para solicitar acesso ao sistema</p>
                 </div>
 
@@ -188,7 +188,7 @@
                             d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    <span>Acompanhantes</span>
+                    <span>Cuidadores</span>
                 </a>
 
                 <a href="#" class="nav-item" data-view="pacientes" onclick="switchView('pacientes'); return false;">
@@ -257,8 +257,8 @@
                             </svg>
                         </div>
                         <div class="stat-content">
-                            <p class="stat-label">Acompanhantes Ativos</p>
-                            <p class="stat-value" id="totalAcompanhantes">0</p>
+                            <p class="stat-label">Cuidadores Ativos</p>
+                            <p class="stat-value" id="totalCuidadores">0</p>
                             <p class="stat-change positive">+12% este mês</p>
                         </div>
                     </div>
@@ -316,7 +316,7 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Acompanhante</th>
+                                        <th>Cuidador</th>
                                         <th>Paciente</th>
                                         <th>Data</th>
                                         <th>Horas</th>
@@ -343,18 +343,18 @@
                 </div>
             </div>
 
-            <!-- Acompanhantes View -->
-            <div id="acompanhantesView" class="view">
+            <!-- Cuidadores View -->
+            <div id="cuidadoresView" class="view">
                 <div class="view-header">
                     <div>
-                        <h1>Acompanhantes</h1>
+                        <h1>Cuidadores</h1>
                         <p>Gestão de cuidadores cadastrados</p>
                     </div>
-                    <button class="btn btn-primary" onclick="showAddAcompanhanteModal()">
+                    <button class="btn btn-primary" onclick="showAddCuidadorModal()">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                         </svg>
-                        Novo Acompanhante
+                        Novo Cuidador
                     </button>
                 </div>
 
@@ -371,7 +371,7 @@
                                     <th>Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="acompanhantesTable">
+                            <tbody id="cuidadoresTable">
                                 <tr>
                                     <td colspan="6" class="empty-state">Nenhum acompanhante cadastrado</td>
                                 </tr>
@@ -438,7 +438,7 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Acompanhante</th>
+                                    <th>Cuidador</th>
                                     <th>Paciente</th>
                                     <th>Data Início</th>
                                     <th>Data Fim</th>
@@ -475,7 +475,7 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h2>Relatório de Horas por Acompanhante</h2>
+                        <h2>Relatório de Horas por Cuidador</h2>
                         <div class="filter-group">
                             <select id="mesFilter" class="form-select">
                                 <option value="">Selecione o mês</option>
@@ -490,7 +490,7 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Acompanhante</th>
+                                    <th>Cuidador</th>
                                     <th>Total de Horas</th>
                                     <th>Valor/Hora</th>
                                     <th>Total a Pagar</th>
@@ -512,13 +512,13 @@
 
     <!-- Modals -->
     <div id="modalOverlay" class="modal-overlay">
-        <!-- Add Acompanhante Modal -->
-        <div id="addAcompanhanteModal" class="modal">
+        <!-- Add Cuidador Modal -->
+        <div id="addCuidadorModal" class="modal">
             <div class="modal-header">
-                <h2>Novo Acompanhante</h2>
+                <h2>Novo Cuidador</h2>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <form id="addAcompanhanteForm" class="modal-form">
+            <form id="addCuidadorForm" class="modal-form">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="acompNome">Nome Completo *</label>
@@ -581,7 +581,7 @@
             <form id="addPlantaoForm" class="modal-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="plantaoAcomp">Acompanhante *</label>
+                        <label for="plantaoAcomp">Cuidador *</label>
                         <select id="plantaoAcomp" required>
                             <option value="">Selecione...</option>
                         </select>
