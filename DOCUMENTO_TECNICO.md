@@ -135,7 +135,7 @@ Desenvolver uma aplicação web que permita:
 
 ### 4.2 Estrutura de Dados
 
-#### 4.2.1 Usuários
+#### 4.2.1 Usuários (Base)
 ```javascript
 {
   id: string,
@@ -145,14 +145,24 @@ Desenvolver uma aplicação web que permita:
   telefone: string,
   cpf: string,
   status: 'pendente' | 'aprovado' | 'rejeitado',
-  documentos: Array<{tipo: string, url: string}>,
-  dadosBancarios: {banco: string, agencia: string, conta: string},
-  mercadoPago: string,
   dataCadastro: Date
 }
 ```
 
-#### 4.2.2 Pacientes
+> **Nota**: O perfil **Admin** utiliza exclusivamente a estrutura base acima, sem necessidade de campos adicionais no MVP.
+
+#### 4.2.2 Detalhes de Cuidadores (Extensão de Usuário)
+```javascript
+{
+  userId: string,
+  documentos: Array<{tipo: string, url: string}>,
+  dadosBancarios: {banco: string, agencia: string, conta: string},
+  mercadoPago: string,
+  especialidades: string[]
+}
+```
+
+#### 4.2.3 Pacientes
 ```javascript
 {
   id: string,
@@ -165,7 +175,7 @@ Desenvolver uma aplicação web que permita:
 }
 ```
 
-#### 4.2.3 Plantões
+#### 4.2.4 Plantões
 ```javascript
 {
   id: string,
@@ -178,6 +188,16 @@ Desenvolver uma aplicação web que permita:
   status: 'pendente' | 'aprovado' | 'rejeitado',
   valorPago: number,
   dataCriacao: Date
+}
+```
+
+#### 4.2.5 Familiares (Vínculo)
+```javascript
+{
+  userId: string,
+  pacienteId: string,
+  parentesco: string, // 'Filho(a)', 'Cônjuge', 'Irmão(ã)', etc.
+  isResponsavelFinanceiro: boolean
 }
 ```
 
