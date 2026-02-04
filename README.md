@@ -41,24 +41,25 @@ CareHub é uma aplicação web moderna desenvolvida para PMEs que prestam servi�
 
 ## 🚀 Tecnologias Utilizadas
 
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Armazenamento**: LocalStorage (MVP) - Preparado para migração para PostgreSQL
-- **Design**: CSS moderno com gradientes, glassmorphism e animações
-- **Responsividade**: Mobile-first design
+O CareHub está sendo migrado de uma versão estática para uma arquitetura profissional moderna:
 
-## 📦 Estrutura do Projeto
+- **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Shadcn/UI
+- **Backend**: NestJS, TypeScript
+- **Banco de Dados**: PostgreSQL com Prisma ORM
+- **Autenticação**: JWT (Role-Based Access Control)
+- **Design**: Visual Premium com Dark Mode e Fluid Design
+
+## 📦 Estrutura do Projeto (Monorepo)
 
 ```
 CareHub/
-├── index.html              # Estrutura HTML principal
-├── styles.css              # Estilos CSS com design moderno
-├── app.js                  # Lógica da aplicação
+├── frontend/               # Aplicação Next.js 15 profissional
+├── backend/                # API NestJS com Prisma
+├── versao-estatica/        # Versão MVP original (HTML/JS)
+├── DOCUMENTO_TECNICO.md    # Especificações técnicas detalhadas
 ├── README.md               # Este arquivo
-├── DOCUMENTO_TECNICO.md    # Documentação técnica completa
-├── GUIA_RAPIDO.md          # Guia rápido de uso
-├── RESUMO_ENTREGA.md       # Resumo da entrega
-├── LICENSE                 # Licença MIT
-└── .gitignore              # Arquivos ignorados pelo Git
+├── GUIA_RAPIDO.md          # Guia de uso por perfil
+└── .gitignore              # Configurações de ignorar git
 ```
 
 ## 🔗 Repositório GitHub
@@ -91,38 +92,21 @@ Para testar o sistema, use as seguintes credenciais:
 
 ## 💻 Como Executar
 
-### Opção 1: Clonar do GitHub (Recomendado)
+### Versão Profissional (Desenvolvimento)
 ```bash
-# Clone o repositório
-git clone https://github.com/joajosers/CareHub.git
+# Frontend
+cd frontend
+npm install
+npm run dev
 
-# Entre na pasta do projeto
-cd CareHub
-
-# Abra o arquivo index.html no navegador
-open index.html  # macOS
-# ou
-start index.html  # Windows
-# ou
-xdg-open index.html  # Linux
+# Backend
+cd backend
+npm install
+npm run start:dev
 ```
 
-### Opção 2: Usar um servidor local
-```bash
-# Navegue até a pasta do projeto
-cd CareHub
-
-# Usando Python 3
-python3 -m http.server 8000
-
-# Usando Node.js (npx)
-npx serve
-
-# Acesse http://localhost:8000
-```
-
-### Opção 3: Abrir diretamente (se já tiver os arquivos)
-1. Navegue até a pasta `CareHub`
+### Versão Estática (Legado/Demonstração)
+1. Navegue até a pasta `versao-estatica/`
 2. Abra o arquivo `index.html` em um navegador moderno
 
 ## 📱 Funcionalidades por Tipo de Usuário
@@ -164,27 +148,31 @@ O sistema oferece:
 - Taxa de aprovação de plantões
 - Projeções de gastos mensais
 
-## 🔮 Próximas Funcionalidades (Roadmap)
+## 🔮 Cronograma de Desenvolvimento (Roadmap)
 
-### Fase 2 - Funcionalidades Avançadas
-- [ ] Sistema completo de edição de registros
-- [ ] Upload e validação de documentos
-- [ ] Notificações por email
-- [ ] Exportação de relatórios (PDF/Excel)
-- [ ] Histórico de alterações
+Conforme o `DOCUMENTO_TECNICO.md`, o projeto segue um ciclo de 4 semanas para o MVP:
 
-### Fase 3 - Integração de Pagamentos
-- [ ] Integração com Mercado Pago
-- [ ] Integração com bancos (PIX, TED)
-- [ ] Comprovantes automáticos
-- [ ] Histórico de transações
+### Fase 1 - Core & Auth (Semana 1)
+- [ ] Sistema de autenticação profissional (NextAuth/JWT)
+- [ ] CRUD de cuidadores e pacientes no banco de dados
+- [ ] Registro básico de plantões e cálculo de horas
+- [ ] Dashboard administrativo inicial
 
-### Fase 4 - Mobile e Avançado
-- [ ] Aplicativo mobile nativo (React Native)
-- [ ] Integração com WhatsApp Business API
-- [ ] Sistema de agendamento automático
-- [ ] Geolocalização para check-in/check-out
-- [ ] IA para análise de relatórios
+### Fase 2 - Recursos Avançados (Semana 2)
+- [ ] Sistema de gestão e aprovação de documentos
+- [ ] Módulo exclusivo de consulta para **Familiares** (Leitura)
+- [ ] Relatórios detalhados e notificações
+- [ ] Validações de negócio complexas
+
+### Fase 3 - Pagamentos & Integração (Semana 3)
+- [ ] Integração real com Gateway de Pagamento (Mercado Pago/Stripe)
+- [ ] Histórico financeiro e comprovantes automáticos
+- [ ] Fluxo de fechamento mensal
+
+### Fase 4 - Otimização & Polimento (Semana 4)
+- [ ] Otimizações de performance e SEO
+- [ ] Testes de segurança e carga
+- [ ] Refinamento da UI/UX Premium
 
 ## 🛠️ Migração para Produção
 
