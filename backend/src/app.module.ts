@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CuidadoresModule } from './cuidadores/cuidadores.module';
+import { FamiliaresModule } from './familiares/familiares.module';
 import { PacientesModule } from './pacientes/pacientes.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { PacientesModule } from './pacientes/pacientes.module';
     AuthModule,
     UsersModule,
     CuidadoresModule,
+    FamiliaresModule,
     PacientesModule,
   ],
   controllers: [AppController],
