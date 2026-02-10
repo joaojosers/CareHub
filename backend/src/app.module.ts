@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CuidadoresModule } from './cuidadores/cuidadores.module';
+import { FamiliaresModule } from './familiares/familiares.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CuidadoresModule } from './cuidadores/cuidadores.module';
     AuthModule,
     UsersModule,
     CuidadoresModule,
+    FamiliaresModule,
   ],
   controllers: [AppController],
   providers: [AppService],
