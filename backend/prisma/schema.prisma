@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  CUIDADOR
+  FAMILIAR
+}
+
+enum UserStatus {
+  PENDENTE
+  APROVADO
+  REJEITADO
+}
+
+enum PacienteStatus {
+  ATIVO
+  INATIVO
+}
+
+enum PlantaoStatus {
+  PENDENTE
+  APROVADO
+  REJEITADO
+}
+
+model User {
+  id             String           @id @default(uuid())
+  tipo           UserRole
+  nome           String
+  email          String           @unique
+  senha          String
+  telefone       String?
+  cpf            String           @unique
+  status         UserStatus       @default(PENDENTE)
+  dataCadastro   DateTime         @default(now())
+  
+  // Relations
+  cuidador       CuidadorDetalhes?
+  familiares     FamiliarVinculo[]
+
+  @@map("users")
+}
+
+model CuidadorDetalhes {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  documentos      Json?    // Array of {tipo, url}
+  dadosBancarios  Json?    // {banco, agencia, conta}
+  mercadoPago     String?
+  especialidades  String[]
+  
+  plantoes        Plantao[]
+
+  @@map("cuidador_detalhes")
+}
+
+model Paciente {
+  id              String         @id @default(uuid())
+  nome            String
+  dataNascimento  DateTime
+  necessidades    String?        @db.Text
+  status          PacienteStatus @default(ATIVO)
+  dataCadastro    DateTime       @default(now())
+  
+  familiares      FamiliarVinculo[]
+  plantoes        Plantao[]
+
+  @@map("pacientes")
+}
+
+model FamiliarVinculo {
+  id                      String   @id @default(uuid())
+  userId                  String
+  pacienteId              String
+  parentesco              String   // 'Filho(a)', 'Cônjuge', etc.
+  isResponsavelFinanceiro Boolean  @default(false)
+  
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paciente                Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pacienteId])
+  @@map("familiar_vinculos")
+}
+
+model Plantao {
+  id                String        @id @default(uuid())
+  cuidadorId        String
+  pacienteId        String
+  dataInicio        DateTime
+  dataFim           DateTime
+  horasTrabalhadas  Float
+  relatorio         String?       @db.Text
+  status            PlantaoStatus @default(PENDENTE)
+  valorPago         Decimal       @default(0) @db.Decimal(10, 2)
+  dataCriacao       DateTime      @default(now())
+  
+  cuidador          CuidadorDetalhes @relation(fields: [cuidadorId], references: [id])
+  paciente          Paciente         @relation(fields: [pacienteId], references: [id])
+
+  @@map("plantoes")
+}

@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:17.5
+    container_name: carehub-db
+    restart: always
+    environment:
+      POSTGRES_USER: careuser
+      POSTGRES_PASSWORD: carepassword
+      POSTGRES_DB: carehub_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
