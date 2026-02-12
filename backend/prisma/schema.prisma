@@ -92,7 +92,7 @@ model FamiliarVinculo {
 
 model Plantao {
   id                String        @id @default(uuid())
-  cuidadorId        String
+  cuidadorId        String?
   pacienteId        String
   dataInicio        DateTime
   dataFim           DateTime
@@ -102,7 +102,7 @@ model Plantao {
   valorPago         Decimal       @default(0) @db.Decimal(10, 2)
   dataCriacao       DateTime      @default(now())
   
-  cuidador          CuidadorDetalhes @relation(fields: [cuidadorId], references: [id])
+  cuidador          CuidadorDetalhes? @relation(fields: [cuidadorId], references: [id])
   paciente          Paciente         @relation(fields: [pacienteId], references: [id])
 
   @@map("plantoes")
