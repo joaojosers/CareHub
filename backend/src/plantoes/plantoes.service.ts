@@ -25,13 +25,32 @@ export class PlantoesService {
         });
         if (!paciente) throw new NotFoundException('Paciente não encontrado');
 
-        // Se houver cuidadorId, verificar se os detalhes do cuidador existem
-        // No MVP, vamos assumir que o cuidadorId passado no DTO é o ID da tabela CuidadorDetalhes.
+        if (dto.cuidadorId) {
+            // Tenta achar o CuidadorDetalhes onde userId = dto.cuidadorId
+            const cuidadorDetalhes = await this.database.client.cuidadorDetalhes.findUnique({
+                where: { userId: dto.cuidadorId },
+            });
 
-        return this.database.client.plantao.create({
+            if (!cuidadorDetalhes) {
+                // Se não achou pelo userId, tenta achar pelo ID direto (caso o frontend tenha mandado o ID interno)
+                const direto = await this.database.client.cuidadorDetalhes.findUnique({
+                    where: { id: dto.cuidadorId },
+                });
+
+                if (!direto) {
+                    throw new NotFoundException('Cuidador não encontrado (ID inválido)');
+                }
+                // Se achou direto, usa o ID original
+            } else {
+                // Se achou pelo userId, substitui o ID usado para criar o plantão
+                dto.cuidadorId = cuidadorDetalhes.id;
+            }
+        }
+
+        const plantao = await this.database.client.plantao.create({
             data: {
                 pacienteId: dto.pacienteId,
-                cuidadorId: dto.cuidadorId,
+                cuidadorId: dto.cuidadorId || null,
                 dataInicio: inicio,
                 dataFim: fim,
                 horasTrabalhadas,
