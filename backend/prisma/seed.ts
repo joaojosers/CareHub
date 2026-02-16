@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, PacienteStatus } from '@prisma/client';
+import { PrismaClient, UserRole, PacienteStatus, UserStatus } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as pg from 'pg';
 import * as bcrypt from 'bcrypt';
@@ -26,6 +26,7 @@ async function main() {
             senha: password,
             cpf: '000.000.000-00',
             tipo: UserRole.ADMIN,
+            status: UserStatus.APROVADO, // Admin sempre aprovado
         },
     });
 
@@ -39,6 +40,7 @@ async function main() {
             senha: passCui,
             cpf: '222.222.222-22',
             tipo: UserRole.CUIDADOR,
+            status: UserStatus.APROVADO, // Para facilitar testes
         },
     });
 
@@ -62,6 +64,7 @@ async function main() {
             senha: passFam,
             cpf: '111.111.111-11',
             tipo: UserRole.FAMILIAR,
+            status: UserStatus.APROVADO, // Para facilitar testes
         },
     });
 
