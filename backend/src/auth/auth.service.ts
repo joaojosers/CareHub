@@ -15,6 +15,10 @@ export class AuthService {
     async validateUser(email: string, pass: string): Promise<any> {
         const user = await this.usersService.findByEmail(email);
         if (user && (await bcrypt.compare(pass, user.senha))) {
+            // Bloqueia login de usuários não aprovados
+            if (user.status !== UserStatus.APROVADO) {
+                return null; // Retorna null para indicar credenciais inválidas
+            }
             const { senha, ...result } = user;
             return result;
         }
