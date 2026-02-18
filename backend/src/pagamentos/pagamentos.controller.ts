@@ -8,8 +8,7 @@ import {
   Body,
   Query,
   UseGuards,
-  HttpCode,
-  HttpStatus,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,61 +19,62 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { PagamentosService } from './pagamentos.service';
-import { CalcularMesDto } from './dto/calcular-mes.dto';
+import { CreatePagamentoDto } from './dto/create-pagamento.dto';
 import { ConfirmarPagamentoDto } from './dto/confirmar-pagamento.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole, PagamentoStatus } from '@prisma/client';
+import { UserRole, PagamentoStatus, MetodoPagamento } from '@prisma/client';
 
-@ApiTags('Pagamentos (Admin)')
+@ApiTags('Pagamentos')
 @ApiBearerAuth()
-@Controller('pagamentos')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
+@Controller('pagamentos')
 export class PagamentosController {
-  constructor(private readonly pagamentosService: PagamentosService) {}
+  constructor(private readonly pagamentosService: PagamentosService) { }
 
-  @Post('calcular-mes')
-  @HttpCode(HttpStatus.OK)
+  // ─── ADMIN ENDPOINTS ───────────────────────────────────────────────────────
+
+  @Post()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Calcular pagamentos do mês',
+    summary: 'Criar pagamento para um plantão (Admin)',
     description:
-      'Calcula e cria/atualiza os pagamentos para um mês específico com base em plantões aprovados',
+      'Cria um pagamento para um plantão APROVADO. Calcula automaticamente valorBruto, taxaPlataforma (10%) e valorLiquido.',
   })
   @ApiResponse({
-    status: 200,
-    description: 'Pagamentos calculados com sucesso',
+    status: 201,
+    description: 'Pagamento criado com sucesso',
     schema: {
       example: {
-        mes: '2026-02',
-        totalPagamentos: 3,
-        totalValor: 1200,
-        pagamentos: [],
+        id: 'uuid',
+        plantaoId: 'uuid-plantao',
+        cuidadorId: 'uuid-cuidador',
+        valorBruto: 160.0,
+        taxaPlataforma: 16.0,
+        valorLiquido: 144.0,
+        status: 'PENDENTE',
+        metodoPagamento: 'PIX',
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Mês inválido ou sem plantões' })
-  async calcularMes(@Body() calcularMesDto: CalcularMesDto) {
-    return this.pagamentosService.calcularMes(calcularMesDto);
+  @ApiResponse({ status: 400, description: 'Plantão não aprovado ou sem cuidador' })
+  @ApiResponse({ status: 404, description: 'Plantão não encontrado' })
+  @ApiResponse({ status: 409, description: 'Pagamento já existe para este plantão' })
+  async create(@Body() dto: CreatePagamentoDto) {
+    return this.pagamentosService.create(dto);
   }
 
   @Get()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Listar pagamentos',
+    summary: 'Listar todos os pagamentos (Admin)',
     description: 'Lista pagamentos com filtros opcionais por mês, status e cuidador',
   })
-  @ApiQuery({ name: 'mes', required: false, example: '2026-02' })
-  @ApiQuery({
-    name: 'status',
-    enum: PagamentoStatus,
-    required: false,
-  })
+  @ApiQuery({ name: 'mes', required: false, example: '2026-02', description: 'Mês (YYYY-MM)' })
+  @ApiQuery({ name: 'status', enum: PagamentoStatus, required: false })
   @ApiQuery({ name: 'cuidadorId', required: false })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de pagamentos retornada',
-  })
+  @ApiResponse({ status: 200, description: 'Lista de pagamentos retornada' })
   async findAll(
     @Query('mes') mes?: string,
     @Query('status') status?: PagamentoStatus,
@@ -84,9 +84,10 @@ export class PagamentosController {
   }
 
   @Get('relatorio/:mes')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Gerar relatório financeiro',
-    description: 'Gera um relatório detalhado de pagamentos para um mês',
+    summary: 'Relatório financeiro mensal (Admin)',
+    description: 'Gera relatório com totais bruto/líquido, taxa da plataforma e breakdown por cuidador',
   })
   @ApiParam({ name: 'mes', description: 'Mês (YYYY-MM)', example: '2026-02' })
   @ApiResponse({
@@ -95,9 +96,12 @@ export class PagamentosController {
     schema: {
       example: {
         mes: '2026-02',
-        totalCuidadores: 3,
-        totalHoras: 60,
-        totalValor: 1200,
+        totalPagamentos: 3,
+        totalCuidadores: 2,
+        totalHoras: 24,
+        totalBruto: 480.0,
+        totalLiquido: 432.0,
+        totalTaxaPlataforma: 48.0,
         porStatus: { PENDENTE: 2, PROCESSADO: 1, PAID: 0 },
         detalhes: [],
       },
@@ -109,7 +113,8 @@ export class PagamentosController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Obter detalhes do pagamento' })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Detalhes de um pagamento (Admin)' })
   @ApiParam({ name: 'id', description: 'ID do pagamento' })
   @ApiResponse({ status: 200, description: 'Pagamento retornado' })
   @ApiResponse({ status: 404, description: 'Pagamento não encontrado' })
@@ -118,56 +123,61 @@ export class PagamentosController {
   }
 
   @Patch(':id/processar')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Marcar pagamento como processado',
-    description: 'Marca um pagamento PENDENTE como PROCESSADO (pronto para transferência)',
+    summary: 'Processar pagamento (Admin)',
+    description: 'Transição PENDENTE → PROCESSADO. Indica que o pagamento está pronto para transferência.',
   })
   @ApiParam({ name: 'id', description: 'ID do pagamento' })
-  @ApiResponse({ status: 200, description: 'Pagamento marcado como processado' })
-  @ApiResponse({
-    status: 400,
-    description: 'Pagamento já foi processado ou confirmado',
-  })
+  @ApiResponse({ status: 200, description: 'Pagamento marcado como PROCESSADO' })
+  @ApiResponse({ status: 400, description: 'Pagamento não está em status PENDENTE' })
   @ApiResponse({ status: 404, description: 'Pagamento não encontrado' })
   async marcarComoProcessado(@Param('id') id: string) {
     return this.pagamentosService.marcarComoProcessado(id);
   }
 
   @Patch(':id/confirmar-pagamento')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Confirmar pagamento',
-    description: 'Marca um pagamento PROCESSADO como PAID com comprovante',
+    summary: 'Confirmar pagamento com comprovante (Admin)',
+    description: 'Transição PROCESSADO → PAID. Registra comprovante e data do pagamento.',
   })
   @ApiParam({ name: 'id', description: 'ID do pagamento' })
-  @ApiResponse({
-    status: 200,
-    description: 'Pagamento confirmado com sucesso',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Pagamento não está em status PROCESSADO',
-  })
+  @ApiResponse({ status: 200, description: 'Pagamento confirmado como PAID' })
+  @ApiResponse({ status: 400, description: 'Pagamento não está em status PROCESSADO' })
   @ApiResponse({ status: 404, description: 'Pagamento não encontrado' })
   async confirmarPagamento(
     @Param('id') id: string,
-    @Body() confirmDto: ConfirmarPagamentoDto,
+    @Body() dto: ConfirmarPagamentoDto,
   ) {
-    return this.pagamentosService.confirmarPagamento(id, confirmDto);
+    return this.pagamentosService.confirmarPagamento(id, dto);
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Deletar pagamento',
-    description: 'Deleta um pagamento (apenas se PENDENTE)',
+    summary: 'Deletar pagamento (Admin)',
+    description: 'Remove um pagamento. Apenas pagamentos PENDENTE podem ser deletados.',
   })
   @ApiParam({ name: 'id', description: 'ID do pagamento' })
-  @ApiResponse({ status: 200, description: 'Pagamento deletado com sucesso' })
-  @ApiResponse({
-    status: 400,
-    description: 'Apenas pagamentos PENDENTE podem ser deletados',
-  })
+  @ApiResponse({ status: 200, description: 'Pagamento deletado' })
+  @ApiResponse({ status: 400, description: 'Apenas PENDENTE podem ser deletados' })
   @ApiResponse({ status: 404, description: 'Pagamento não encontrado' })
   async delete(@Param('id') id: string) {
     return this.pagamentosService.delete(id);
+  }
+
+  // ─── CUIDADOR ENDPOINTS ────────────────────────────────────────────────────
+
+  @Get('meus-pagamentos')
+  @Roles(UserRole.CUIDADOR)
+  @ApiOperation({
+    summary: 'Meus pagamentos (Cuidador)',
+    description: 'Lista os pagamentos do cuidador autenticado, com detalhes do plantão e paciente.',
+  })
+  @ApiResponse({ status: 200, description: 'Lista de pagamentos do cuidador' })
+  async findMy(@Request() req: any) {
+    const cuidadorId = req.user.cuidadorId;
+    return this.pagamentosService.findMy(cuidadorId);
   }
 }
