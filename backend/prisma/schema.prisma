@@ -29,6 +29,12 @@ enum PlantaoStatus {
   REJEITADO
 }
 
+enum PagamentoStatus {
+  PENDENTE
+  PROCESSADO
+  PAID
+}
+
 model User {
   id             String           @id @default(uuid())
   tipo           UserRole
@@ -58,6 +64,7 @@ model CuidadorDetalhes {
   especialidades  String[]
   
   plantoes        Plantao[]
+  pagamentos      Pagamento[]
 
   @@map("cuidador_detalhes")
 }
@@ -106,4 +113,22 @@ model Plantao {
   paciente          Paciente         @relation(fields: [pacienteId], references: [id])
 
   @@map("plantoes")
+}
+
+model Pagamento {
+  id                String          @id @default(uuid())
+  cuidadorId        String
+  mes               String          // Format: YYYY-MM
+  totalHoras        Float
+  valorTotal        Decimal         @db.Decimal(10, 2)
+  status            PagamentoStatus @default(PENDENTE)
+  dataPagamento     DateTime?
+  numeroComprovante String?
+  criadoEm          DateTime        @default(now())
+  atualizadoEm      DateTime        @updatedAt
+  
+  cuidador          CuidadorDetalhes @relation(fields: [cuidadorId], references: [id])
+
+  @@unique([cuidadorId, mes])
+  @@map("pagamentos")
 }
