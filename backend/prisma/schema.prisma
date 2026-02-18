@@ -35,6 +35,12 @@ enum PagamentoStatus {
   PAID
 }
 
+enum MetodoPagamento {
+  PIX
+  TRANSFERENCIA
+  MERCADO_PAGO
+}
+
 model User {
   id             String           @id @default(uuid())
   tipo           UserRole
@@ -62,6 +68,7 @@ model CuidadorDetalhes {
   dadosBancarios  Json?    // {banco, agencia, conta}
   mercadoPago     String?
   especialidades  String[]
+  valorHora       Decimal  @default(20) @db.Decimal(10, 2) // Hourly rate
   
   plantoes        Plantao[]
   pagamentos      Pagamento[]
@@ -111,24 +118,27 @@ model Plantao {
   
   cuidador          CuidadorDetalhes? @relation(fields: [cuidadorId], references: [id])
   paciente          Paciente         @relation(fields: [pacienteId], references: [id])
+  pagamento         Pagamento?
 
   @@map("plantoes")
 }
 
 model Pagamento {
   id                String          @id @default(uuid())
+  plantaoId         String          @unique  // One payment per shift
   cuidadorId        String
-  mes               String          // Format: YYYY-MM
-  totalHoras        Float
-  valorTotal        Decimal         @db.Decimal(10, 2)
+  valorBruto        Decimal         @db.Decimal(10, 2) // horasTrabalhadas × valorHora
+  valorLiquido      Decimal         @db.Decimal(10, 2) // valorBruto - 10% platform fee
+  taxaPlataforma    Decimal         @db.Decimal(10, 2) // 10% of valorBruto
   status            PagamentoStatus @default(PENDENTE)
+  metodoPagamento   MetodoPagamento @default(PIX)
   dataPagamento     DateTime?
   numeroComprovante String?
   criadoEm          DateTime        @default(now())
   atualizadoEm      DateTime        @updatedAt
   
+  plantao           Plantao          @relation(fields: [plantaoId], references: [id])
   cuidador          CuidadorDetalhes @relation(fields: [cuidadorId], references: [id])
 
-  @@unique([cuidadorId, mes])
   @@map("pagamentos")
 }

@@ -1,166 +1,128 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { Pagamento, PagamentoStatus, Prisma } from '@prisma/client';
-import { CalcularMesDto } from './dto/calcular-mes.dto';
+import { PagamentoStatus, MetodoPagamento, Prisma } from '@prisma/client';
+import { CreatePagamentoDto } from './dto/create-pagamento.dto';
 import { ConfirmarPagamentoDto } from './dto/confirmar-pagamento.dto';
 
-const VALOR_HORA = 20; // R$ 20 por hora
+const TAXA_PLATAFORMA = 0.10; // 10% platform fee
 
 @Injectable()
 export class PagamentosService {
   constructor(private databaseService: DatabaseService) { }
 
   /**
-   * Calcula e cria/atualiza pagamentos para um mês específico
-   * Agregando horas de plantões aprovados
+   * Creates a payment for a specific approved shift
+   * valorBruto = horasTrabalhadas × valorHora
+   * taxaPlataforma = valorBruto × 10%
+   * valorLiquido = valorBruto - taxaPlataforma
    */
-  async calcularMes(calcularMesDto: CalcularMesDto): Promise<any> {
-    const { mes, cuidadorId } = calcularMesDto;
+  async create(dto: CreatePagamentoDto): Promise<any> {
+    const { plantaoId, metodoPagamento } = dto;
 
-    // Valida formato do mês
-    const [ano, mesNum] = mes.split('-').map(Number);
-    if (isNaN(ano) || isNaN(mesNum) || mesNum < 1 || mesNum > 12) {
-      throw new BadRequestException('Mês informado inválido');
-    }
-
-    // Define período do mês
-    const dataInicio = new Date(`${mes}-01T00:00:00Z`);
-    const dataFim = new Date(ano, mesNum, 1); // Primeiro dia do próximo mês
-
-    // Busca plantões aprovados no período
-    const plantoes = await this.databaseService.client.plantao.findMany({
-      where: {
-        status: 'APROVADO',
-        dataInicio: {
-          gte: dataInicio,
-          lt: dataFim,
-        },
-        cuidadorId: cuidadorId || undefined,
-      },
+    // 1. Fetch the shift with caregiver details
+    const plantao = await this.databaseService.client.plantao.findUnique({
+      where: { id: plantaoId },
       include: {
         cuidador: true,
       },
     });
 
-    if (plantoes.length === 0) {
+    if (!plantao) {
+      throw new NotFoundException(`Plantão ${plantaoId} não encontrado`);
+    }
+
+    // 2. Only APROVADO shifts can be paid
+    if (plantao.status !== 'APROVADO') {
       throw new BadRequestException(
-        `Nenhum plantão aprovado encontrado para ${mes}`,
+        `Apenas plantões APROVADO podem ser pagos. Status atual: ${plantao.status}`,
       );
     }
 
-    // Agrupa por cuidador
-    const pagamentosPorCuidador: {
-      [cuidadorId: string]: {
-        totalHoras: number;
-        plantoes: typeof plantoes;
-      };
-    } = {};
+    // 3. Must have an assigned caregiver
+    if (!plantao.cuidadorId || !plantao.cuidador) {
+      throw new BadRequestException(
+        'Plantão não possui cuidador atribuído',
+      );
+    }
 
-    plantoes.forEach((plantao) => {
-      const cuidId = plantao.cuidadorId;
-      if (!cuidId) return; // Ignora plantões sem cuidador
-
-      if (!pagamentosPorCuidador[cuidId]) {
-        pagamentosPorCuidador[cuidId] = {
-          totalHoras: 0,
-          plantoes: [],
-        };
-      }
-      pagamentosPorCuidador[cuidId].totalHoras += plantao.horasTrabalhadas;
-      pagamentosPorCuidador[cuidId].plantoes.push(plantao);
+    // 4. Check if payment already exists for this shift
+    const existing = await this.databaseService.client.pagamento.findUnique({
+      where: { plantaoId },
     });
 
-    // Cria ou atualiza pagamentos
-    const pagamentosProcessados: any[] = [];
-
-    for (const [cuidId, dados] of Object.entries(pagamentosPorCuidador)) {
-      const valorTotal = new Prisma.Decimal(
-        dados.totalHoras * VALOR_HORA,
+    if (existing) {
+      throw new ConflictException(
+        `Já existe um pagamento para o plantão ${plantaoId}`,
       );
-
-      // Verifica se pagamento já existe
-      const pagamentoExistente = await this.databaseService.client.pagamento.findUnique(
-        {
-          where: {
-            cuidadorId_mes: {
-              cuidadorId: cuidId,
-              mes,
-            },
-          },
-        },
-      );
-
-      if (pagamentoExistente) {
-        // Atualiza se já existe
-        const pagamentoAtualizado =
-          await this.databaseService.client.pagamento.update({
-            where: { id: pagamentoExistente.id },
-            data: {
-              totalHoras: dados.totalHoras,
-              valorTotal,
-            },
-            include: {
-              cuidador: {
-                include: {
-                  user: true,
-                },
-              },
-            },
-          });
-        pagamentosProcessados.push(pagamentoAtualizado);
-      } else {
-        // Cria novo pagamento
-        const novoPagamento =
-          await this.databaseService.client.pagamento.create({
-            data: {
-              cuidadorId: cuidId,
-              mes,
-              totalHoras: dados.totalHoras,
-              valorTotal,
-              status: PagamentoStatus.PENDENTE,
-            },
-            include: {
-              cuidador: {
-                include: {
-                  user: true,
-                },
-              },
-            },
-          });
-        pagamentosProcessados.push(novoPagamento);
-      }
     }
 
-    return {
-      mes,
-      totalPagamentos: pagamentosProcessados.length,
-      totalValor: pagamentosProcessados.reduce(
-        (sum, p) => sum + Number(p.valorTotal),
-        0,
-      ),
-      pagamentos: pagamentosProcessados,
-    };
+    // 5. Calculate values
+    const valorHora = plantao.cuidador.valorHora ?? new Prisma.Decimal(20);
+    const valorBruto = new Prisma.Decimal(plantao.horasTrabalhadas).mul(valorHora);
+    const taxaPlataforma = valorBruto.mul(new Prisma.Decimal(TAXA_PLATAFORMA));
+    const valorLiquido = valorBruto.sub(taxaPlataforma);
+
+    // 6. Create payment
+    return this.databaseService.client.pagamento.create({
+      data: {
+        plantaoId,
+        cuidadorId: plantao.cuidadorId,
+        valorBruto,
+        valorLiquido,
+        taxaPlataforma,
+        status: PagamentoStatus.PENDENTE,
+        metodoPagamento: metodoPagamento ?? MetodoPagamento.PIX,
+      },
+      include: {
+        plantao: {
+          include: { paciente: true },
+        },
+        cuidador: {
+          include: { user: true },
+        },
+      },
+    });
   }
 
   /**
-   * Lista pagamentos com filtros opcionais
+   * List all payments (Admin) with optional filters
    */
   async findAll(
     mes?: string,
     status?: PagamentoStatus,
     cuidadorId?: string,
-  ): Promise<Pagamento[]> {
+  ): Promise<any[]> {
+    // Build date filter from mes (YYYY-MM)
+    let dateFilter: { gte?: Date; lt?: Date } | undefined;
+    if (mes) {
+      const [ano, mesNum] = mes.split('-').map(Number);
+      dateFilter = {
+        gte: new Date(`${mes}-01T00:00:00Z`),
+        lt: new Date(ano, mesNum, 1),
+      };
+    }
+
     return this.databaseService.client.pagamento.findMany({
       where: {
-        mes: mes || undefined,
         status: status || undefined,
         cuidadorId: cuidadorId || undefined,
+        ...(dateFilter && {
+          plantao: {
+            dataInicio: dateFilter,
+          },
+        }),
       },
       include: {
+        plantao: {
+          include: { paciente: true },
+        },
         cuidador: {
-          include: {
-            user: true,
-          },
+          include: { user: true },
         },
       },
       orderBy: { criadoEm: 'desc' },
@@ -168,16 +130,32 @@ export class PagamentosService {
   }
 
   /**
-   * Busca um pagamento específico
+   * List payments for the authenticated caregiver (Cuidador view)
    */
-  async findById(id: string): Promise<Pagamento> {
+  async findMy(cuidadorId: string): Promise<any[]> {
+    return this.databaseService.client.pagamento.findMany({
+      where: { cuidadorId },
+      include: {
+        plantao: {
+          include: { paciente: true },
+        },
+      },
+      orderBy: { criadoEm: 'desc' },
+    });
+  }
+
+  /**
+   * Get a single payment by ID
+   */
+  async findById(id: string): Promise<any> {
     const pagamento = await this.databaseService.client.pagamento.findUnique({
       where: { id },
       include: {
+        plantao: {
+          include: { paciente: true },
+        },
         cuidador: {
-          include: {
-            user: true,
-          },
+          include: { user: true },
         },
       },
     });
@@ -190,47 +168,41 @@ export class PagamentosService {
   }
 
   /**
-   * Marca pagamento como processado (pronto para transferência)
+   * Mark payment as PROCESSADO (ready for bank transfer)
+   * Transition: PENDENTE → PROCESSADO
    */
-  async marcarComoProcessado(id: string): Promise<Pagamento> {
+  async marcarComoProcessado(id: string): Promise<any> {
     const pagamento = await this.findById(id);
 
-    if (
-      pagamento.status !== PagamentoStatus.PENDENTE &&
-      pagamento.status !== PagamentoStatus.PROCESSADO
-    ) {
+    if (pagamento.status !== PagamentoStatus.PENDENTE) {
       throw new BadRequestException(
-        'Apenas pagamentos PENDENTE podem ser processados',
+        `Apenas pagamentos PENDENTE podem ser processados. Status atual: ${pagamento.status}`,
       );
     }
 
     return this.databaseService.client.pagamento.update({
       where: { id },
-      data: {
-        status: PagamentoStatus.PROCESSADO,
-      },
+      data: { status: PagamentoStatus.PROCESSADO },
       include: {
-        cuidador: {
-          include: {
-            user: true,
-          },
-        },
+        plantao: { include: { paciente: true } },
+        cuidador: { include: { user: true } },
       },
     });
   }
 
   /**
-   * Confirma pagamento com comprovante
+   * Confirm payment with proof (receipt)
+   * Transition: PROCESSADO → PAID
    */
   async confirmarPagamento(
     id: string,
-    confirmDto: ConfirmarPagamentoDto,
-  ): Promise<Pagamento> {
+    dto: ConfirmarPagamentoDto,
+  ): Promise<any> {
     const pagamento = await this.findById(id);
 
     if (pagamento.status !== PagamentoStatus.PROCESSADO) {
       throw new BadRequestException(
-        'Apenas pagamentos PROCESSADO podem ser confirmados',
+        `Apenas pagamentos PROCESSADO podem ser confirmados. Status atual: ${pagamento.status}`,
       );
     }
 
@@ -238,68 +210,96 @@ export class PagamentosService {
       where: { id },
       data: {
         status: PagamentoStatus.PAID,
-        dataPagamento: confirmDto.dataPagamento
-          ? new Date(confirmDto.dataPagamento)
+        dataPagamento: dto.dataPagamento
+          ? new Date(dto.dataPagamento)
           : new Date(),
-        numeroComprovante: confirmDto.numeroComprovante,
+        numeroComprovante: dto.numeroComprovante,
         atualizadoEm: new Date(),
       },
       include: {
-        cuidador: {
-          include: {
-            user: true,
-          },
-        },
+        plantao: { include: { paciente: true } },
+        cuidador: { include: { user: true } },
       },
     });
   }
 
   /**
-   * Gera relatório financeiro de um mês
+   * Monthly financial summary report
    */
   async gerarRelatorio(mes: string): Promise<any> {
-    const pagamentos = await this.findAll(mes);
+    const [ano, mesNum] = mes.split('-').map(Number);
+    if (isNaN(ano) || isNaN(mesNum)) {
+      throw new BadRequestException('Mês inválido. Use formato YYYY-MM');
+    }
+
+    const pagamentos = await this.databaseService.client.pagamento.findMany({
+      where: {
+        plantao: {
+          dataInicio: {
+            gte: new Date(`${mes}-01T00:00:00Z`),
+            lt: new Date(ano, mesNum, 1),
+          },
+        },
+      },
+      include: {
+        plantao: true,
+        cuidador: { include: { user: true } },
+      },
+    });
 
     if (pagamentos.length === 0) {
       throw new NotFoundException(`Nenhum pagamento encontrado para ${mes}`);
     }
 
-    const pagamentosComCuidador = pagamentos as any[];
+    const pagamentosTyped = pagamentos as any[];
 
     const resumo = {
       mes,
+      totalPagamentos: pagamentos.length,
       totalCuidadores: new Set(pagamentos.map((p) => p.cuidadorId)).size,
-      totalHoras: pagamentos.reduce((sum, p) => sum + p.totalHoras, 0),
-      totalValor: pagamentos.reduce((sum, p) => sum + Number(p.valorTotal), 0),
+      totalHoras: pagamentosTyped.reduce(
+        (sum, p) => sum + (p.plantao?.horasTrabalhadas ?? 0),
+        0,
+      ),
+      totalBruto: pagamentos.reduce(
+        (sum, p) => sum + Number(p.valorBruto),
+        0,
+      ),
+      totalLiquido: pagamentos.reduce(
+        (sum, p) => sum + Number(p.valorLiquido),
+        0,
+      ),
+      totalTaxaPlataforma: pagamentos.reduce(
+        (sum, p) => sum + Number(p.taxaPlataforma),
+        0,
+      ),
       porStatus: {
-        PENDENTE: 0,
-        PROCESSADO: 0,
+        PENDENTE: pagamentos.filter((p) => p.status === 'PENDENTE').length,
+        PROCESSADO: pagamentos.filter((p) => p.status === 'PROCESSADO').length,
+        PAID: pagamentos.filter((p) => p.status === 'PAID').length,
       },
-      detalhes: pagamentosComCuidador.map((p) => ({
+      detalhes: pagamentosTyped.map((p) => ({
         cuidador: p.cuidador?.user?.nome ?? 'N/A',
         email: p.cuidador?.user?.email ?? 'N/A',
-        totalHoras: p.totalHoras,
-        valorTotal: Number(p.valorTotal),
+        plantaoId: p.plantaoId,
+        horasTrabalhadas: p.plantao?.horasTrabalhadas ?? 0,
+        valorBruto: Number(p.valorBruto),
+        taxaPlataforma: Number(p.taxaPlataforma),
+        valorLiquido: Number(p.valorLiquido),
+        metodoPagamento: p.metodoPagamento,
         status: p.status,
         dataPagamento: p.dataPagamento,
         numeroComprovante: p.numeroComprovante,
       })),
     };
 
-    // Conta por status
-    pagamentos.forEach((p) => {
-      if (p.status in resumo.porStatus) {
-        resumo.porStatus[p.status as keyof typeof resumo.porStatus]++;
-      }
-    });
-
     return resumo;
   }
 
   /**
-   * Deleta um pagamento (apenas se PENDENTE)
+   * Delete a payment (only PENDENTE)
    */
-  async delete(id: string): Promise<Pagamento> {
+  async delete(id: string): Promise<any> {
     const pagamento = await this.findById(id);
 
     if (pagamento.status !== PagamentoStatus.PENDENTE) {
@@ -310,13 +310,6 @@ export class PagamentosService {
 
     return this.databaseService.client.pagamento.delete({
       where: { id },
-      include: {
-        cuidador: {
-          include: {
-            user: true,
-          },
-        },
-      },
     });
   }
 }
