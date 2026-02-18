@@ -8,7 +8,7 @@ const VALOR_HORA = 20; // R$ 20 por hora
 
 @Injectable()
 export class PagamentosService {
-  constructor(private databaseService: DatabaseService) {}
+  constructor(private databaseService: DatabaseService) { }
 
   /**
    * Calcula e cria/atualiza pagamentos para um mês específico
@@ -71,7 +71,7 @@ export class PagamentosService {
     });
 
     // Cria ou atualiza pagamentos
-    const pagamentosProcessados = [];
+    const pagamentosProcessados: any[] = [];
 
     for (const [cuidId, dados] of Object.entries(pagamentosPorCuidador)) {
       const valorTotal = new Prisma.Decimal(
@@ -264,6 +264,8 @@ export class PagamentosService {
       throw new NotFoundException(`Nenhum pagamento encontrado para ${mes}`);
     }
 
+    const pagamentosComCuidador = pagamentos as any[];
+
     const resumo = {
       mes,
       totalCuidadores: new Set(pagamentos.map((p) => p.cuidadorId)).size,
@@ -272,11 +274,10 @@ export class PagamentosService {
       porStatus: {
         PENDENTE: 0,
         PROCESSADO: 0,
-        PAID: 0,
       },
-      detalhes: pagamentos.map((p) => ({
-        cuidador: p.cuidador.user.nome,
-        email: p.cuidador.user.email,
+      detalhes: pagamentosComCuidador.map((p) => ({
+        cuidador: p.cuidador?.user?.nome ?? 'N/A',
+        email: p.cuidador?.user?.email ?? 'N/A',
         totalHoras: p.totalHoras,
         valorTotal: Number(p.valorTotal),
         status: p.status,
@@ -287,7 +288,9 @@ export class PagamentosService {
 
     // Conta por status
     pagamentos.forEach((p) => {
-      resumo.porStatus[p.status]++;
+      if (p.status in resumo.porStatus) {
+        resumo.porStatus[p.status as keyof typeof resumo.porStatus]++;
+      }
     });
 
     return resumo;
