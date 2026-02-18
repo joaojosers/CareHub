@@ -297,7 +297,7 @@ Integrate Swagger for interactive API documentation and testing.
 
 ## Issue #14: Unified Self-Registration & User Approval Workflow
 
-**Status:** 🚀 IN PROGRESS
+**Status:** ✅ IMPLEMENTED
 
 **Category:** Feature Implementation / Security Enhancement
 
@@ -398,18 +398,18 @@ Currently, the CareHub system requires an administrator to manually create all u
 
 ### ✅ **Acceptance Criteria**
 
-- [ ] A visitor can register at `/auth/register` without authentication
-- [ ] Registration creates user with `status = PENDENTE`
-- [ ] Email and CPF must be unique (409 Conflict if duplicate)
-- [ ] Cannot create ADMIN via public registration (400 Bad Request)
-- [ ] PENDENTE users cannot login (401 Unauthorized)
-- [ ] Admin can list users by status (`GET /users?status=PENDENTE`)
-- [ ] Admin can approve users (`PATCH /users/:id/approve`)
-- [ ] Admin can reject users (`PATCH /users/:id/reject`)
-- [ ] APROVADO users can login successfully
-- [ ] REJEITADO users cannot login
-- [ ] All endpoints documented in Swagger
-- [ ] Password is hashed (never stored in plain text)
+- [x] A visitor can register at `/auth/register` without authentication
+- [x] Registration creates user with `status = PENDENTE`
+- [x] Email and CPF must be unique (409 Conflict if duplicate)
+- [x] Cannot create ADMIN via public registration (400 Bad Request)
+- [x] PENDENTE users cannot login (401 Unauthorized)
+- [x] Admin can list users by status (`GET /users?status=PENDENTE`)
+- [x] Admin can approve users (`PATCH /users/:id/approve`)
+- [x] Admin can reject users (`PATCH /users/:id/reject`)
+- [x] APROVADO users can login successfully
+- [x] REJEITADO users cannot login
+- [x] All endpoints documented in Swagger
+- [x] Password is hashed (never stored in plain text)
 
 ---
 
@@ -429,14 +429,14 @@ Currently, the CareHub system requires an administrator to manually create all u
 
 ### 📦 **Deliverables**
 
-- [ ] `src/auth/dto/register.dto.ts` - RegisterDto with validation
-- [ ] `src/auth/auth.service.ts` - register() method
-- [ ] `src/auth/auth.controller.ts` - POST /auth/register endpoint
-- [ ] `src/users/users.controller.ts` - Admin approval endpoints
-- [ ] `src/users/users.service.ts` - findAll() and updateStatus() methods
-- [ ] `src/users/users.module.ts` - UsersController registration
-- [ ] Updated Swagger documentation
-- [ ] Manual testing completed
+- [x] `src/auth/dto/register.dto.ts` - RegisterDto with validation
+- [x] `src/auth/auth.service.ts` - register() method
+- [x] `src/auth/auth.controller.ts` - POST /auth/register endpoint
+- [x] `src/users/users.controller.ts` - Admin approval endpoints
+- [x] `src/users/users.service.ts` - findAll() and updateStatus() methods
+- [x] `src/users/users.module.ts` - UsersController registration
+- [x] Updated Swagger documentation
+- [x] Manual testing completed
 
 ---
 
@@ -450,15 +450,240 @@ Currently, the CareHub system requires an administrator to manually create all u
 
 ---
 
+## Issue #15: Payments Module & Payment Processing
+
+**Status:** 📋 PLANNED
+
+**Category:** Feature Implementation / Financial Management
+
+**Branch:** `feat/payments-module`
+
+**Priority:** P1 - High
+
+**Sprint:** Week 4
+
+---
+
+### 📋 **Business Context**
+
+CareHub operates as a gig economy platform where caregivers are paid per shift worked. Currently, there is no automated payment system — administrators must manually calculate and process payments. This creates errors, delays, and lack of transparency for both caregivers and families.
+
+**Goal**: Build a complete payment management system that:
+- Automatically calculates caregiver payroll based on approved shifts
+- Tracks payment status (PENDENTE, PROCESSADO, FALHOU)
+- Gives admins full control over payment processing
+- Provides caregivers visibility into their earnings
+- Gives families transparency on what they are paying for
+
+**Business Impact**:
+- ✅ Eliminates manual payroll errors
+- ✅ Faster payment processing
+- ✅ Full audit trail of all payments
+- ✅ Caregiver trust and retention
+- ✅ Family billing transparency
+
+---
+
+### 🎯 **Technical Requirements**
+
+#### **1. Database Schema**
+New model `Pagamento` in `schema.prisma`:
+- `id` (UUID)
+- `cuidadorId` (FK → CuidadorDetalhes)
+- `plantaoId` (FK → Plantao) — one payment per shift
+- `valorBruto` (Decimal) — `horasTrabalhadas × valorHora`
+- `valorLiquido` (Decimal) — after 10% platform fee
+- `status` (Enum: PENDENTE, PROCESSADO, FALHOU)
+- `metodoPagamento` (Enum: MERCADO_PAGO, TRANSFERENCIA, PIX)
+- `dataPagamento` (DateTime?)
+- `comprovante` (String?) — URL to receipt
+- `dataCriacao` (DateTime)
+
+New enums:
+- `PagamentoStatus`: `PENDENTE`, `PROCESSADO`, `FALHOU`
+- `MetodoPagamento`: `MERCADO_PAGO`, `TRANSFERENCIA`, `PIX`
+
+Also add `valorHora` (Decimal) to `CuidadorDetalhes`.
+
+#### **2. Endpoints**
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| `GET` | `/payments` | Admin | List all payments (with filters) |
+| `GET` | `/payments/my` | Cuidador | List own payments |
+| `GET` | `/payments/:id` | Admin/Cuidador | Get payment details |
+| `POST` | `/payments/calculate` | Admin | Calculate payroll for a shift |
+| `POST` | `/payments/process/:id` | Admin | Process a pending payment |
+| `GET` | `/payments/summary` | Admin | Monthly payment summary |
+
+#### **3. Payroll Calculation Logic**
+```
+valorBruto   = horasTrabalhadas × valorHoraCuidador
+valorLiquido = valorBruto - (valorBruto × 0.10)  // 10% platform fee
+```
+
+#### **4. Payment Flow**
+```
+Plantao APROVADO
+  → POST /payments/calculate  → Pagamento PENDENTE
+  → POST /payments/process/:id → Pagamento PROCESSADO
+```
+
+---
+
+### 🛠️ **Implementation Plan**
+
+**Step 1**: Update Prisma Schema
+- Add `Pagamento` model with all fields
+- Add `PagamentoStatus` and `MetodoPagamento` enums
+- Add `valorHora` field to `CuidadorDetalhes`
+- Run `npx prisma migrate dev --name add-payments-module`
+
+**Step 2**: Create DTOs
+- `CreatePagamentoDto` (plantaoId, metodoPagamento)
+- `ProcessPagamentoDto` (comprovante?)
+
+**Step 3**: Create PaymentsService
+- `calculate(plantaoId)` — compute valorBruto/Liquido
+- `process(id, dto)` — mark as PROCESSADO
+- `findAll(filters)` — list with pagination
+- `findMy(cuidadorId)` — caregiver's own payments
+- `findOne(id)` — single payment detail
+- `summary(month, year)` — monthly totals
+
+**Step 4**: Create PaymentsController
+- Endpoints with proper guards (Admin vs Cuidador)
+- Swagger documentation with `@ApiBearerAuth`
+
+**Step 5**: Register PaymentsModule
+- Import DatabaseModule
+- Register in AppModule
+
+---
+
+### ✅ **Acceptance Criteria**
+
+- [ ] Admin can calculate payment for an approved shift
+- [ ] Payment is created with status `PENDENTE`
+- [ ] Admin can process a pending payment
+- [ ] Payment status changes to `PROCESSADO`
+- [ ] Caregiver can view their own payments (`GET /payments/my`)
+- [ ] Admin can view all payments with filters
+- [ ] Monthly summary shows total paid per caregiver
+- [ ] Cannot calculate payment for non-approved shifts (400 Bad Request)
+- [ ] Cannot process an already processed payment (409 Conflict)
+- [ ] All endpoints documented in Swagger
+
+---
+
+### 🧪 **Testing Checklist**
+
+- [ ] Calculate payment for an approved shift
+- [ ] Verify `valorBruto = horasTrabalhadas × valorHora`
+- [ ] Verify `valorLiquido = valorBruto - 10%`
+- [ ] Process the pending payment
+- [ ] Verify status changes to `PROCESSADO`
+- [ ] Login as cuidador and view own payments
+- [ ] Get monthly summary as admin
+- [ ] Try to calculate payment for PENDENTE shift (should fail)
+- [ ] Try to process already PROCESSADO payment (should fail)
+
+---
+
+### 📦 **Deliverables**
+
+- [ ] `prisma/schema.prisma` — Pagamento model + enums
+- [ ] `prisma/migrations/` — new migration
+- [ ] `src/payments/payments.module.ts`
+- [ ] `src/payments/payments.service.ts`
+- [ ] `src/payments/payments.controller.ts`
+- [ ] `src/payments/dto/create-pagamento.dto.ts`
+- [ ] `src/payments/dto/process-pagamento.dto.ts`
+- [ ] Updated `GITHUB_ISSUES.md`
+
+---
+
+### 🔗 **Related Issues**
+
+- Depends on: Issue #7 (Plantões Module) ✅ Completed
+- Depends on: Issue #14 (Self-Registration) ✅ Completed
+- Blocks: Issue #16 (Reports Module)
+- Related: Issue #5 (Cuidadores Module) — valorHora field needed
+
+---
+
 ## Summary Statistics
 
 | Status | Count |
 |--------|-------|
-| ✅ Implemented | 13 |
-| � In Progress | 1 |
-| � Pending | 0 |
+| ✅ Implemented | 14 |
+| 📋 Planned | 1 |
 | ⏸️ On Hold | 0 |
-| **Total** | **14** |
+| **Total** | **15** |
+
+---
+
+### 🎯 **Technical Requirements**
+
+#### **1. Payment Data Model**
+- Create `Pagamento` entity in schema.prisma with fields:
+  - `id`, `cuidadorId`, `mes` (YYYY-MM), `totalHoras`, `valorTotal`, `status` (PENDENTE/PROCESSADO/PAID)
+  - Timestamps: `criadoEm`, `atualizadoEm`
+
+#### **2. Payment Calculation Endpoints**
+- **Route**: `POST /pagamentos/calcular-mes`
+- **Input**: `{ mes: "2026-02", cuidadorId?: string }`
+- **Behavior**: Auto-calculate payments from approved plantões
+
+- **Route**: `GET /pagamentos?mes=2026-02&status=PENDENTE`
+- **Authentication**: JWT (Admin only)
+- **Behavior**: List payments with filters
+
+#### **3. Payment Processing**
+- **Route**: `PATCH /pagamentos/:id/processar`
+- **Behavior**: Mark payment as PROCESSADO (ready for bank transfer)
+
+- **Route**: `PATCH /pagamentos/:id/confirmar-pagamento`
+- **Input**: `{ dataPagamento, numeroComprovante }`
+- **Behavior**: Mark as PAID with proof
+
+#### **4. Financial Reports**
+- **Route**: `GET /pagamentos/relatorio?mes=2026-02`
+- **Output**: Summary with total hours, total amount, breakdown by caregiver
+
+---
+
+### 🛠️ **Implementation Plan**
+
+1. Update `schema.prisma` with Pagamento model
+2. Create `pagamentos.module.ts`, `pagamentos.service.ts`, `pagamentos.controller.ts`
+3. Implement payment calculation logic
+4. Create payment DTOs with validation
+5. Add Swagger documentation
+6. Test with sample shifts
+
+---
+
+### ✅ **Acceptance Criteria**
+
+- [ ] Pagamento model created in database
+- [ ] Calculate monthly payments from approved shifts
+- [ ] Admin can list payments filtered by month/status
+- [ ] Admin can mark payment as processado
+- [ ] Admin can confirm payment with proof
+- [ ] Financial report endpoint works correctly
+- [ ] All endpoints documented in Swagger
+
+---
+
+## Summary Statistics
+
+| Status | Count |
+|--------|-------|
+| ✅ Implemented | 14 |
+| 📋 Pending | 1 |
+| ⏸️ On Hold | 0 |
+| **Total** | **15** |
 
 ---
 
@@ -474,6 +699,6 @@ Currently, the CareHub system requires an administrator to manually create all u
 
 ---
 
-**Last Updated:** February 16, 2026  
-**Version:** 2.0.0  
-**Current Sprint:** Week 3
+**Last Updated:** February 18, 2026  
+**Version:** 2.1.0  
+**Current Sprint:** Week 4
