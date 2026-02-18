@@ -452,11 +452,9 @@ Currently, the CareHub system requires an administrator to manually create all u
 
 ## Issue #15: Payments Module & Payment Processing
 
-**Status:** 📋 PLANNED
+**Status:** ✅ IMPLEMENTED
 
 **Category:** Feature Implementation / Financial Management
-
-**Branch:** `feat/payments-module`
 
 **Priority:** P1 - High
 
@@ -466,14 +464,13 @@ Currently, the CareHub system requires an administrator to manually create all u
 
 ### 📋 **Business Context**
 
-CareHub operates as a gig economy platform where caregivers are paid per shift worked. Currently, there is no automated payment system — administrators must manually calculate and process payments. This creates errors, delays, and lack of transparency for both caregivers and families.
+CareHub operates as a gig economy platform where caregivers are paid per shift worked. The system needed an automated payment system to replace manual calculations.
 
 **Goal**: Build a complete payment management system that:
 - Automatically calculates caregiver payroll based on approved shifts
-- Tracks payment status (PENDENTE, PROCESSADO, FALHOU)
+- Tracks payment status (PENDENTE, PROCESSADO, PAID)
 - Gives admins full control over payment processing
-- Provides caregivers visibility into their earnings
-- Gives families transparency on what they are paying for
+- Provides transparent payment reporting
 
 **Business Impact**:
 - ✅ Eliminates manual payroll errors
@@ -484,131 +481,129 @@ CareHub operates as a gig economy platform where caregivers are paid per shift w
 
 ---
 
-### 🎯 **Technical Requirements**
+### 🎯 **Technical Implementation**
 
-#### **1. Database Schema**
-New model `Pagamento` in `schema.prisma`:
-- `id` (UUID)
-- `cuidadorId` (FK → CuidadorDetalhes)
-- `plantaoId` (FK → Plantao) — one payment per shift
-- `valorBruto` (Decimal) — `horasTrabalhadas × valorHora`
-- `valorLiquido` (Decimal) — after 10% platform fee
-- `status` (Enum: PENDENTE, PROCESSADO, FALHOU)
-- `metodoPagamento` (Enum: MERCADO_PAGO, TRANSFERENCIA, PIX)
-- `dataPagamento` (DateTime?)
-- `comprovante` (String?) — URL to receipt
-- `dataCriacao` (DateTime)
+#### **1. Payment Data Model (Pagamento)**
+- `id` (UUID) - Primary key
+- `cuidadorId` (FK → CuidadorDetalhes) - Caregiver reference
+- `mes` (String YYYY-MM) - Payment month
+- `totalHoras` (Float) - Aggregated hours from approved shifts
+- `valorTotal` (Decimal) - R$ 20/hour × totalHoras
+- `status` (Enum: PENDENTE, PROCESSADO, PAID) - Payment status
+- `dataPagamento` (DateTime?) - Date payment was made
+- `numeroComprovante` (String?) - Payment proof/receipt number
+- `criadoEm` (DateTime) - Record creation timestamp
+- `atualizadoEm` (DateTime) - Record update timestamp
 
-New enums:
-- `PagamentoStatus`: `PENDENTE`, `PROCESSADO`, `FALHOU`
-- `MetodoPagamento`: `MERCADO_PAGO`, `TRANSFERENCIA`, `PIX`
+Unique constraint: `(cuidadorId, mes)` — one payment per caregiver per month
 
-Also add `valorHora` (Decimal) to `CuidadorDetalhes`.
-
-#### **2. Endpoints**
-
-| Method | Route | Auth | Description |
-|--------|-------|------|-------------|
-| `GET` | `/payments` | Admin | List all payments (with filters) |
-| `GET` | `/payments/my` | Cuidador | List own payments |
-| `GET` | `/payments/:id` | Admin/Cuidador | Get payment details |
-| `POST` | `/payments/calculate` | Admin | Calculate payroll for a shift |
-| `POST` | `/payments/process/:id` | Admin | Process a pending payment |
-| `GET` | `/payments/summary` | Admin | Monthly payment summary |
-
-#### **3. Payroll Calculation Logic**
+#### **2. Payment Processing Workflow**
 ```
-valorBruto   = horasTrabalhadas × valorHoraCuidador
-valorLiquido = valorBruto - (valorBruto × 0.10)  // 10% platform fee
+PENDENTE → PROCESSADO → PAID
+  ↓          ↓           ↓
+Draft    Ready for   Confirmed
+         Transfer    with Proof
 ```
 
-#### **4. Payment Flow**
+#### **3. Admin Endpoints**
+- `POST /pagamentos/calcular-mes` - Calculate/aggregate payments from approved shifts
+- `GET /pagamentos` - List payments with filters (mes, status, cuidadorId)
+- `GET /pagamentos/:id` - Get payment details
+- `GET /pagamentos/relatorio/:mes` - Financial report for month
+- `PATCH /pagamentos/:id/processar` - Mark as PROCESSADO
+- `PATCH /pagamentos/:id/confirmar-pagamento` - Confirm as PAID with proof
+- `DELETE /pagamentos/:id` - Delete only PENDENTE payments
+
+#### **4. Payment Calculation Logic**
 ```
-Plantao APROVADO
-  → POST /payments/calculate  → Pagamento PENDENTE
-  → POST /payments/process/:id → Pagamento PROCESSADO
+Algorithm:
+1. Find all Plantao records where:
+   - status = APROVADO
+   - dataInicio is in specified month
+   - cuidadorId is not null
+2. Group by cuidadorId
+3. Sum horasTrabalhadas per caregiver
+4. Calculate valorTotal = totalHoras × R$20
+5. Create/Update Pagamento record for (cuidadorId, mes)
 ```
 
----
-
-### 🛠️ **Implementation Plan**
-
-**Step 1**: Update Prisma Schema
-- Add `Pagamento` model with all fields
-- Add `PagamentoStatus` and `MetodoPagamento` enums
-- Add `valorHora` field to `CuidadorDetalhes`
-- Run `npx prisma migrate dev --name add-payments-module`
-
-**Step 2**: Create DTOs
-- `CreatePagamentoDto` (plantaoId, metodoPagamento)
-- `ProcessPagamentoDto` (comprovante?)
-
-**Step 3**: Create PaymentsService
-- `calculate(plantaoId)` — compute valorBruto/Liquido
-- `process(id, dto)` — mark as PROCESSADO
-- `findAll(filters)` — list with pagination
-- `findMy(cuidadorId)` — caregiver's own payments
-- `findOne(id)` — single payment detail
-- `summary(month, year)` — monthly totals
-
-**Step 4**: Create PaymentsController
-- Endpoints with proper guards (Admin vs Cuidador)
-- Swagger documentation with `@ApiBearerAuth`
-
-**Step 5**: Register PaymentsModule
-- Import DatabaseModule
-- Register in AppModule
+#### **5. Financial Reports**
+Monthly summary includes:
+- Total caregivers processed
+- Total hours paid
+- Total amount paid
+- Breakdown by caregiver (nome, email, hours, amount)
+- Count by status (PENDENTE, PROCESSADO, PAID)
 
 ---
 
 ### ✅ **Acceptance Criteria**
 
-- [ ] Admin can calculate payment for an approved shift
-- [ ] Payment is created with status `PENDENTE`
-- [ ] Admin can process a pending payment
-- [ ] Payment status changes to `PROCESSADO`
-- [ ] Caregiver can view their own payments (`GET /payments/my`)
-- [ ] Admin can view all payments with filters
-- [ ] Monthly summary shows total paid per caregiver
-- [ ] Cannot calculate payment for non-approved shifts (400 Bad Request)
-- [ ] Cannot process an already processed payment (409 Conflict)
-- [ ] All endpoints documented in Swagger
+- [x] Pagamento model created in database with proper relations
+- [x] Calculate monthly payments from approved shifts via `POST /pagamentos/calcular-mes`
+- [x] Aggregation logic: sums hours, multiplies by R$20
+- [x] Admin can list payments filtered by month/status/caregiver
+- [x] Admin can mark payment as PROCESSADO (`PATCH /pagamentos/:id/processar`)
+- [x] Admin can confirm payment with proof (`PATCH /pagamentos/:id/confirmar-pagamento`)
+- [x] Financial report endpoint generates monthly summaries (`GET /pagamentos/relatorio/:mes`)
+- [x] Only PENDENTE payments can be deleted
+- [x] Cannot transition to invalid states (e.g., PAID → PENDENTE)
+- [x] All endpoints documented in Swagger with examples
 
----
+### 📦 **Files Created**
 
-### 🧪 **Testing Checklist**
+- `backend/prisma/schema.prisma` - Added Pagamento model and PagamentoStatus enum
+- `backend/src/pagamentos/pagamentos.module.ts` - Module configuration
+- `backend/src/pagamentos/pagamentos.service.ts` - Payment service with calculation logic
+- `backend/src/pagamentos/pagamentos.controller.ts` - REST API endpoints (6 endpoints)
+- `backend/src/pagamentos/dto/calcular-mes.dto.ts` - DTO for month calculation
+- `backend/src/pagamentos/dto/confirmar-pagamento.dto.ts` - DTO for payment confirmation
+- `backend/src/app.module.ts` - Updated imports
 
-- [ ] Calculate payment for an approved shift
-- [ ] Verify `valorBruto = horasTrabalhadas × valorHora`
-- [ ] Verify `valorLiquido = valorBruto - 10%`
-- [ ] Process the pending payment
-- [ ] Verify status changes to `PROCESSADO`
-- [ ] Login as cuidador and view own payments
-- [ ] Get monthly summary as admin
-- [ ] Try to calculate payment for PENDENTE shift (should fail)
-- [ ] Try to process already PROCESSADO payment (should fail)
+### 🚀 **Key Features Implemented**
 
----
+1. **Payment Calculation Engine**
+   - Aggregates approved plantões by caregiver per month
+   - Automatic computation: R$ 20/hour (fixed rate)
+   - Creates/updates payment records
+   - Validates month format (YYYY-MM)
 
-### 📦 **Deliverables**
+2. **Payment Workflow States**
+   - PENDENTE: New payment, awaiting admin review
+   - PROCESSADO: Ready for bank transfer/payout system
+   - PAID: Transferred with confirmation/receipt
 
-- [ ] `prisma/schema.prisma` — Pagamento model + enums
-- [ ] `prisma/migrations/` — new migration
-- [ ] `src/payments/payments.module.ts`
-- [ ] `src/payments/payments.service.ts`
-- [ ] `src/payments/payments.controller.ts`
-- [ ] `src/payments/dto/create-pagamento.dto.ts`
-- [ ] `src/payments/dto/process-pagamento.dto.ts`
-- [ ] Updated `GITHUB_ISSUES.md`
+3. **Status Transition Guards**
+   - Only PENDENTE → PROCESSADO allowed
+   - Only PROCESSADO → PAID allowed
+   - Prevents invalid transitions with clear error messages
 
----
+4. **Financial Reporting**
+   - Monthly summaries with totals
+   - Breakdown by caregiver (name, email, hours, amount)
+   - Status distribution (count by state)
+   - Proof tracking (payment date, receipt number)
+
+5. **Admin Controls**
+   - Filter payments by month (YYYY-MM format)
+   - Filter payments by status (PENDENTE/PROCESSADO/PAID)
+   - Filter payments by specific caregiver
+   - Delete only PENDENTE payments (safety guard)
+
+6. **Error Handling**
+   - 400 Bad Request for invalid month format
+   - 400 Bad Request when no shifts found for month
+   - 400 Bad Request for invalid status transitions
+   - 404 Not Found for non-existent payments
+   - 409 Conflict prevented through business logic
 
 ### 🔗 **Related Issues**
 
 - Depends on: Issue #7 (Plantões Module) ✅ Completed
+- Depends on: Issue #5 (Cuidadores Module) ✅ Completed
 - Depends on: Issue #14 (Self-Registration) ✅ Completed
-- Blocks: Issue #16 (Reports Module)
-- Related: Issue #5 (Cuidadores Module) — valorHora field needed
+- Blocks: Issue #16 (Reports & Analytics Module)
+- Future integration: Pix/bank transfers, email notifications
 
 ---
 
@@ -616,72 +611,8 @@ Plantao APROVADO
 
 | Status | Count |
 |--------|-------|
-| ✅ Implemented | 14 |
-| 📋 Planned | 1 |
-| ⏸️ On Hold | 0 |
-| **Total** | **15** |
-
----
-
-### 🎯 **Technical Requirements**
-
-#### **1. Payment Data Model**
-- Create `Pagamento` entity in schema.prisma with fields:
-  - `id`, `cuidadorId`, `mes` (YYYY-MM), `totalHoras`, `valorTotal`, `status` (PENDENTE/PROCESSADO/PAID)
-  - Timestamps: `criadoEm`, `atualizadoEm`
-
-#### **2. Payment Calculation Endpoints**
-- **Route**: `POST /pagamentos/calcular-mes`
-- **Input**: `{ mes: "2026-02", cuidadorId?: string }`
-- **Behavior**: Auto-calculate payments from approved plantões
-
-- **Route**: `GET /pagamentos?mes=2026-02&status=PENDENTE`
-- **Authentication**: JWT (Admin only)
-- **Behavior**: List payments with filters
-
-#### **3. Payment Processing**
-- **Route**: `PATCH /pagamentos/:id/processar`
-- **Behavior**: Mark payment as PROCESSADO (ready for bank transfer)
-
-- **Route**: `PATCH /pagamentos/:id/confirmar-pagamento`
-- **Input**: `{ dataPagamento, numeroComprovante }`
-- **Behavior**: Mark as PAID with proof
-
-#### **4. Financial Reports**
-- **Route**: `GET /pagamentos/relatorio?mes=2026-02`
-- **Output**: Summary with total hours, total amount, breakdown by caregiver
-
----
-
-### 🛠️ **Implementation Plan**
-
-1. Update `schema.prisma` with Pagamento model
-2. Create `pagamentos.module.ts`, `pagamentos.service.ts`, `pagamentos.controller.ts`
-3. Implement payment calculation logic
-4. Create payment DTOs with validation
-5. Add Swagger documentation
-6. Test with sample shifts
-
----
-
-### ✅ **Acceptance Criteria**
-
-- [ ] Pagamento model created in database
-- [ ] Calculate monthly payments from approved shifts
-- [ ] Admin can list payments filtered by month/status
-- [ ] Admin can mark payment as processado
-- [ ] Admin can confirm payment with proof
-- [ ] Financial report endpoint works correctly
-- [ ] All endpoints documented in Swagger
-
----
-
-## Summary Statistics
-
-| Status | Count |
-|--------|-------|
-| ✅ Implemented | 14 |
-| 📋 Pending | 1 |
+| ✅ Implemented | 15 |
+| 📋 Pending | 0 |
 | ⏸️ On Hold | 0 |
 | **Total** | **15** |
 
