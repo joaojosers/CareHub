@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "@nestjs/common": "^11.1.13",
+    "@nestjs/config": "^4.0.3",
+    "@nestjs/core": "^11.1.13",
+    "@nestjs/swagger": "^11.2.6",
+    "@prisma/client": "^7.4.0",
+    "bcrypt": "^6.0.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.13",
+    "@types/bcrypt": "^6.0.0",
+    "@types/jest": "^30.0.0"
+  }
+}
