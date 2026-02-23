@@ -24,7 +24,7 @@ export class CuidadoresService {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(dto.senha, salt);
 
-        // 3. Criar Usuário e Detalhes do Cuidador em uma transação
+        // 3. Criar Usuário, Detalhes do Cuidador, Endereço e Documentos em uma transação
         return this.databaseService.client.user.create({
             data: {
                 nome: dto.nome,
@@ -33,16 +33,32 @@ export class CuidadoresService {
                 cpf: dto.cpf,
                 telefone: dto.telefone,
                 tipo: UserRole.CUIDADOR,
+                endereco: dto.endereco ? {
+                    create: {
+                        ...dto.endereco
+                    }
+                } : undefined,
                 cuidador: {
                     create: {
                         especialidades: dto.especialidades || [],
                         dadosBancarios: dto.dadosBancarios || {},
-                        documentos: dto.documentos || [],
+                        mercadoPago: null, // Pode ser preenchido via PATCH
+                        documentos: dto.documentos ? {
+                            create: dto.documentos.map(doc => ({
+                                tipo: doc.tipo,
+                                url: doc.url,
+                            }))
+                        } : undefined,
                     },
                 },
             },
             include: {
-                cuidador: true,
+                endereco: true,
+                cuidador: {
+                    include: {
+                        documentos: true
+                    }
+                },
             },
         });
     }
@@ -51,7 +67,12 @@ export class CuidadoresService {
         return this.databaseService.client.user.findMany({
             where: { tipo: UserRole.CUIDADOR },
             include: {
-                cuidador: true,
+                endereco: true,
+                cuidador: {
+                    include: {
+                        documentos: true
+                    }
+                },
             },
             orderBy: { dataCadastro: 'desc' },
         });
@@ -61,8 +82,14 @@ export class CuidadoresService {
         return this.databaseService.client.user.findUnique({
             where: { id, tipo: UserRole.CUIDADOR },
             include: {
-                cuidador: true,
+                endereco: true,
+                cuidador: {
+                    include: {
+                        documentos: true
+                    }
+                },
             },
         });
     }
 }
+

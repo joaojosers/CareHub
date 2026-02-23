@@ -1,5 +1,7 @@
-import { IsNotEmpty, IsISO8601, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsISO8601, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { RelatorioDto } from './relatorio.dto';
 
 export class CreatePlantaoDto {
     @ApiProperty({ description: 'ID do paciente', example: 'uuid-do-paciente' })
@@ -22,8 +24,10 @@ export class CreatePlantaoDto {
     @IsNotEmpty({ message: 'A data de fim é obrigatória' })
     dataFim: string;
 
-    @ApiPropertyOptional({ description: 'Relatório inicial ou observações', example: 'Plantão agendado.' })
-    @IsString()
+    @ApiPropertyOptional({ type: RelatorioDto, description: 'Relatório estruturado do plantão' })
     @IsOptional()
-    relatorio?: string;
+    @ValidateNested()
+    @Type(() => RelatorioDto)
+    relatorio?: RelatorioDto;
 }
+

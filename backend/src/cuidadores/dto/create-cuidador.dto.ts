@@ -1,6 +1,9 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsArray, IsEnum, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsArray, IsEnum, MinLength, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { UserRole } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EnderecoDto } from '../../common/dto/endereco.dto';
+import { DocumentoDto } from './documento.dto';
 
 export class CreateCuidadorDto {
     @ApiProperty({ description: 'Nome completo do cuidador', example: 'Ana Maria Ferreira' })
@@ -34,11 +37,21 @@ export class CreateCuidadorDto {
     @IsOptional()
     especialidades?: string[];
 
-    @ApiPropertyOptional({ description: 'Dados bancários (JSON)' })
+    @ApiPropertyOptional({ description: 'Dados bancários (JSON)', example: { banco: 'Nubank', agencia: '0001', conta: '123456-7' } })
     @IsOptional()
     dadosBancarios?: any;
 
-    @ApiPropertyOptional({ description: 'Documentos do cuidador (JSON)' })
+    @ApiPropertyOptional({ type: [DocumentoDto], description: 'Documentos do cuidador' })
     @IsOptional()
-    documentos?: any; // Será ajustado quando tivermos upload de arquivos
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => DocumentoDto)
+    documentos?: DocumentoDto[];
+
+    @ApiPropertyOptional({ type: EnderecoDto, description: 'Endereço do cuidador' })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => EnderecoDto)
+    endereco?: EnderecoDto;
 }
+

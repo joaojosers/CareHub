@@ -3,7 +3,7 @@ import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly prisma: DatabaseService) {}
+  constructor(private readonly prisma: DatabaseService) { }
 
   async getAdminStats() {
     const [totalCuidadores, totalPacientes, totalPlantoes] = await Promise.all([
@@ -13,7 +13,7 @@ export class ReportsService {
     ]);
 
     const pagamentos = await this.prisma.client.pagamento.findMany();
-    
+
     const totalRevenue = pagamentos.reduce((acc, p) => acc + Number(p.taxaPlataforma), 0);
     const totalProcessado = pagamentos.reduce((acc, p) => acc + Number(p.valorBruto), 0);
 
@@ -80,7 +80,8 @@ export class ReportsService {
               include: {
                 cuidador: {
                   include: { user: true }
-                }
+                },
+                relatorioAtividade: true
               }
             }
           }
@@ -91,7 +92,7 @@ export class ReportsService {
     return vinculos.map(v => {
       const plantoes = v.paciente.plantoes;
       const totalHours = plantoes.reduce((acc, p) => acc + p.horasTrabalhadas, 0);
-      
+
       const cuidadoresUnicos = Array.from(new Set(plantoes.map(p => p.cuidador?.user.nome))).filter(Boolean);
 
       return {
@@ -104,9 +105,11 @@ export class ReportsService {
           dataFim: p.dataFim,
           horas: p.horasTrabalhadas,
           cuidador: p.cuidador?.user.nome,
-          relatorio: p.relatorio,
+          relatorio: p.relatorioAtividade?.descricao || p.relatorioLegacy, // Tenta o novo, cai no legado se não existir
         }))
       };
     });
   }
 }
+
+

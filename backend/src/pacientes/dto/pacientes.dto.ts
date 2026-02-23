@@ -1,5 +1,7 @@
-import { IsNotEmpty, IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsDateString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EnderecoDto } from '../../common/dto/endereco.dto';
 
 export class CreatePacienteDto {
     @ApiProperty({ description: 'Nome completo do paciente', example: 'Dona Maria de Oliveira' })
@@ -16,4 +18,11 @@ export class CreatePacienteDto {
     @IsString()
     @IsOptional()
     necessidades?: string;
+
+    @ApiPropertyOptional({ type: EnderecoDto, description: 'Endereço do paciente' })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => EnderecoDto)
+    endereco?: EnderecoDto;
 }
+
