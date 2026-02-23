@@ -611,10 +611,115 @@ Monthly summary includes:
 
 | Status | Count |
 |--------|-------|
-| ✅ Implemented | 15 |
+| ✅ Implemented | 16 |
 | 📋 Pending | 0 |
 | ⏸️ On Hold | 0 |
-| **Total** | **15** |
+| **Total** | **16** |
+
+---
+
+## Issue #16: Reports & Analytics Module
+
+**Status:** ✅ IMPLEMENTED
+
+**Category:** Feature Implementation / Business Intelligence
+
+**Priority:** P2 - Medium
+
+**Sprint:** Week 5
+
+---
+
+### 📋 **Business Context**
+
+While CareHub has basic list views and a monthly payment report, the administration needs a centralized way to view the platform's performance, and users (caregivers and families) need better visibility into their activities.
+
+**Goal**: Build a dedicated reporting service that provides:
+- High-level metrics for the Admin dashboard
+- Performance tracking for caregivers
+- Patient care summaries for family members
+- Financial health metrics (platform fees collected)
+
+**Business Impact**:
+- ✅ Better data-driven decision making
+- ✅ Increased transparency for all user types
+- ✅ Easier tracking of platform growth
+- ✅ Automated monthly summaries
+
+---
+
+### 🎯 **Technical Requirements**
+
+#### **1. Admin Global Metrics**
+- **Route**: `GET /reports/admin/stats`
+- **Output**:
+  - Total active caregivers/patients
+  - Total hours worked (all time / current month)
+  - Total payments processed
+  - Total platform revenue (sum of `taxaPlataforma`)
+
+#### **2. Caregiver Performance Report**
+- **Route**: `GET /reports/caregiver/me`
+- **Output**:
+  - Total earned
+  - Total hours worked
+  - Breakdown by patient
+  - Average hours per shift
+
+#### **3. Family/Patient Activity Report**
+- **Route**: `GET /reports/family/patients`
+- **Output**:
+  - Summary of shifts for all linked patients
+  - Total hours consumed
+  - List of caregivers who attended the patients
+
+#### **4. Export Capabilities (Future)**
+- Foundation for CSV/PDF export
+
+---
+
+### 🛠️ **Implementation Plan**
+
+**Step 1**: Create `ReportsModule`, `ReportsService`, and `ReportsController` ✅
+- Base structure in `src/reports/` ✅
+
+**Step 2**: Implement Admin Stats Logic ✅
+- Aggregate data from `users`, `plantoes`, and `pagamentos` tables ✅
+
+**Step 3**: Implement Caregiver Personal Report ✅
+- Filter data by the authenticated user's `cuidadorId` ✅
+
+**Step 4**: Implement Family Report ✅
+- Logic to find patients linked to the familiar and aggregate their plantões ✅
+
+**Step 5**: Document with Swagger ✅
+
+---
+
+### ✅ **Acceptance Criteria**
+
+- [x] Admin can view global platform statistics
+- [x] Caregivers can view their own performance metrics
+- [x] Families can view activity summaries for their patients
+- [x] All endpoints protected by appropriate roles
+- [x] Swagger documentation for all report endpoints
+
+---
+
+### 📦 **Files Created**
+
+- `backend/src/reports/reports.module.ts`
+- `backend/src/reports/reports.service.ts`
+- `backend/src/reports/reports.controller.ts`
+- `backend/src/reports/dto/report-stats.dto.ts`
+
+---
+
+### 🔗 **Related Issues**
+
+- Depends on: Issue #15 (Payments Module) ✅ Completed
+- Depends on: Issue #7 (Plantões Module) ✅ Completed
+- Related: Future Dashboard UI implementation
 
 ---
 
