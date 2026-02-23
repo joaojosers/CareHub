@@ -32,7 +32,7 @@ export class PlantoesService {
             });
 
             if (!cuidadorDetalhes) {
-                // Se não achou pelo userId, tenta achar pelo ID direto (caso o frontend tenha mandado o ID interno)
+                // Se não achou pelo userId, tenta achar pelo ID direto
                 const direto = await this.database.client.cuidadorDetalhes.findUnique({
                     where: { id: dto.cuidadorId },
                 });
@@ -40,22 +40,27 @@ export class PlantoesService {
                 if (!direto) {
                     throw new NotFoundException('Cuidador não encontrado (ID inválido)');
                 }
-                // Se achou direto, usa o ID original
             } else {
-                // Se achou pelo userId, substitui o ID usado para criar o plantão
                 dto.cuidadorId = cuidadorDetalhes.id;
             }
         }
 
-        const plantao = await this.database.client.plantao.create({
+        return this.database.client.plantao.create({
             data: {
                 pacienteId: dto.pacienteId,
                 cuidadorId: dto.cuidadorId || null,
                 dataInicio: inicio,
                 dataFim: fim,
                 horasTrabalhadas,
-                relatorio: dto.relatorio,
                 status: PlantaoStatus.PENDENTE,
+                relatorioAtividade: dto.relatorio ? {
+                    create: {
+                        descricao: dto.relatorio.descricao,
+                        medicacoes: dto.relatorio.medicacoes,
+                        pressaoArterial: dto.relatorio.pressaoArterial,
+                        observacoes: dto.relatorio.observacoes,
+                    }
+                } : undefined,
             },
             include: {
                 paciente: true,
@@ -63,7 +68,8 @@ export class PlantoesService {
                     include: {
                         user: true
                     }
-                }
+                },
+                relatorioAtividade: true,
             }
         });
     }
@@ -72,14 +78,14 @@ export class PlantoesService {
         return this.database.client.plantao.findMany({
             include: {
                 paciente: true,
-                cuidador: { include: { user: true } }
+                cuidador: { include: { user: true } },
+                relatorioAtividade: true,
             },
             orderBy: { dataInicio: 'desc' }
         });
     }
 
     async findByCuidador(userId: string) {
-        // Primeiro achar o Detalhe do cuidador pelo userId
         const cuidador = await this.database.client.cuidadorDetalhes.findUnique({
             where: { userId }
         });
@@ -88,13 +94,15 @@ export class PlantoesService {
 
         return this.database.client.plantao.findMany({
             where: { cuidadorId: cuidador.id },
-            include: { paciente: true },
+            include: {
+                paciente: true,
+                relatorioAtividade: true,
+            },
             orderBy: { dataInicio: 'desc' }
         });
     }
 
     async findByFamiliar(userId: string) {
-        // Achar pacientes vinculados ao familiar
         const vinculos = await this.database.client.familiarVinculo.findMany({
             where: { userId }
         });
@@ -105,7 +113,8 @@ export class PlantoesService {
             where: { pacienteId: { in: pacienteIds } },
             include: {
                 paciente: true,
-                cuidador: { include: { user: true } }
+                cuidador: { include: { user: true } },
+                relatorioAtividade: true,
             },
             orderBy: { dataInicio: 'desc' }
         });
@@ -120,7 +129,10 @@ export class PlantoesService {
 
         return this.database.client.plantao.update({
             where: { id },
-            data: { status }
+            data: { status },
+            include: { relatorioAtividade: true }
         });
     }
 }
+
+

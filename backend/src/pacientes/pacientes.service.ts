@@ -12,12 +12,23 @@ export class PacientesService {
                 nome: dto.nome,
                 dataNascimento: new Date(dto.dataNascimento),
                 necessidades: dto.necessidades,
+                endereco: dto.endereco ? {
+                    create: {
+                        ...dto.endereco
+                    }
+                } : undefined
             },
+            include: {
+                endereco: true
+            }
         });
     }
 
     async findAll() {
         return this.databaseService.client.paciente.findMany({
+            include: {
+                endereco: true
+            },
             orderBy: { dataCadastro: 'desc' },
         });
     }
@@ -25,6 +36,10 @@ export class PacientesService {
     async findOne(id: string) {
         return this.databaseService.client.paciente.findUnique({
             where: { id },
+            include: {
+                endereco: true
+            }
         });
     }
 }
+
