@@ -7,23 +7,34 @@ export class PagamentosService {
   constructor(private readonly db: DatabaseService) {}
 
   async gerarPix(cuidadorId: string) {
-    // Busca cuidador pelo modelo CuidadorDetalhes
-    const cuidador = await this.db.cuidadorDetalhes.findUnique({
+    const cuidador = await this.db.client.cuidadorDetalhes.findUnique({
       where: { id: cuidadorId },
-      include: { user: true }, // traz também os dados do usuário
+      include: { user: true },
     });
 
     if (!cuidador) {
       throw new NotFoundException('Cuidador não encontrado');
     }
 
-    // Exemplo de payload Pix usando dados bancários e nome do usuário
-    const payloadPix = `00020126580014BR.GOV.BCB.PIX0136${cuidador.dadosBancarios?.conta}5204000053039865406100.005802BR5913${cuidador.user.nome}6009RIO DE JANEIRO62070503***6304ABCD`;
+    const dadosBancarios = cuidador.dadosBancarios as {
+      banco?: string;
+      agencia?: string;
+      conta?: string;
+    };
 
-    // Gera QR Code em base64
+    const payloadPix = `00020126580014BR.GOV.BCB.PIX0136${dadosBancarios?.conta ?? ''}5204000053039865406100.005802BR5913${cuidador.user.nome}6009RIO DE JANEIRO62070503***6304ABCD`;
+
     const qrCodeBase64 = await QRCode.toDataURL(payloadPix);
 
-    // Retorna para o frontend
+    const pagamento = await this.db.client.pagamento.create({
+      data: {
+        cuidadorId: cuidador.id,
+        valor: 100.0,
+        status: 'Pendente',
+        payload: payloadPix,
+      },
+    });
+
     return {
       qr_code: qrCodeBase64,
       payload: payloadPix,
@@ -31,6 +42,37 @@ export class PagamentosService {
         id: cuidador.id,
         nome: cuidador.user.nome,
       },
+      pagamentoId: pagamento.id,
     };
+  }
+
+  async listarPagamentos() {
+    return this.db.client.pagamento.findMany({
+      include: {
+        cuidador: { include: { user: true } },
+      },
+    });
+  }
+
+  async buscarPagamentoPorId(id: number) {
+    const pagamento = await this.db.client.pagamento.findUnique({
+      where: { id },
+      include: {
+        cuidador: { include: { user: true } },
+      },
+    });
+
+    if (!pagamento) {
+      throw new NotFoundException('Pagamento não encontrado');
+    }
+
+    return pagamento;
+  }
+
+  async atualizarStatus(id: number, status: string) {
+    return this.db.client.pagamento.update({
+      where: { id },
+      data: { status },
+    });
   }
 }

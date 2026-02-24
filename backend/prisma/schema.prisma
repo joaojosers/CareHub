@@ -39,27 +39,12 @@ model User {
   cpf            String           @unique
   status         UserStatus       @default(PENDENTE)
   dataCadastro   DateTime         @default(now())
-  
+
   // Relations
   cuidador       CuidadorDetalhes?
   familiares     FamiliarVinculo[]
 
   @@map("users")
-}
-
-model CuidadorDetalhes {
-  id              String   @id @default(uuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  documentos      Json?    // Array of {tipo, url}
-  dadosBancarios  Json?    // {banco, agencia, conta}
-  mercadoPago     String?
-  especialidades  String[]
-  
-  plantoes        Plantao[]
-
-  @@map("cuidador_detalhes")
 }
 
 model Paciente {
@@ -69,7 +54,7 @@ model Paciente {
   necessidades    String?        @db.Text
   status          PacienteStatus @default(ATIVO)
   dataCadastro    DateTime       @default(now())
-  
+
   familiares      FamiliarVinculo[]
   plantoes        Plantao[]
 
@@ -80,9 +65,9 @@ model FamiliarVinculo {
   id                      String   @id @default(uuid())
   userId                  String
   pacienteId              String
-  parentesco              String   // 'Filho(a)', 'Cônjuge', etc.
+  parentesco              String
   isResponsavelFinanceiro Boolean  @default(false)
-  
+
   user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   paciente                Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
 
@@ -101,9 +86,38 @@ model Plantao {
   status            PlantaoStatus @default(PENDENTE)
   valorPago         Decimal       @default(0) @db.Decimal(10, 2)
   dataCriacao       DateTime      @default(now())
-  
+
   cuidador          CuidadorDetalhes? @relation(fields: [cuidadorId], references: [id])
   paciente          Paciente         @relation(fields: [pacienteId], references: [id])
 
   @@map("plantoes")
+}
+
+model Pagamento {
+  id         Int      @id @default(autoincrement())
+  cuidadorId String
+  valor      Float
+  status     String
+  payload    String
+  createdAt  DateTime @default(now())
+
+  cuidador   CuidadorDetalhes @relation(fields: [cuidadorId], references: [id])
+
+  @@map("pagamentos")
+}
+
+model CuidadorDetalhes {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  documentos      Json?
+  dadosBancarios  Json?
+  mercadoPago     String?
+  especialidades  String[]
+
+  plantoes        Plantao[]
+  pagamentos      Pagamento[]
+
+  @@map("cuidador_detalhes")
 }

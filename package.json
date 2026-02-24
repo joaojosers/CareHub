@@ -11,6 +11,12 @@
   "devDependencies": {
     "@nestjs/testing": "^11.1.13",
     "@types/bcrypt": "^6.0.0",
-    "@types/jest": "^30.0.0"
+    "@types/jest": "^30.0.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "build": "nest build"
   }
 }
