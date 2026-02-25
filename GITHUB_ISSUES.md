@@ -611,10 +611,10 @@ Monthly summary includes:
 
 | Status | Count |
 |--------|-------|
-| ✅ Implemented | 16 |
+| ✅ Implemented | 17 |
+| 🚧 In Progress | 1 |
 | 📋 Pending | 0 |
-| ⏸️ On Hold | 0 |
-| **Total** | **16** |
+| **Total** | **18** |
 
 ---
 
@@ -723,6 +723,124 @@ While CareHub has basic list views and a monthly payment report, the administrat
 
 ---
 
+## Issue #18: Testing Infrastructure & Integration Tests
+
+**Status:** 🚧 IN PROGRESS
+
+**Category:** Quality Assurance / Development Tools
+
+**Priority:** P1 - High
+
+**Sprint:** Week 5
+
+**Branch:** `feat/testing-infrastructure`
+
+---
+
+### 📋 **Business Context**
+
+Following the major database normalization refactor (Issue #17), the CareHub backend has grown to cover authentication, caregivers, patients, shifts, payments, and reports. Without a structured test suite, every new feature or refactor risks silently breaking existing functionality.
+
+**Goal**: Establish a comprehensive testing foundation that:
+- Validates all critical business logic in isolation (unit tests).
+- Verifies that modules interact correctly end-to-end (integration/e2e tests).
+- Provides a safety net for future development and refactors.
+- Enables a future CI/CD pipeline to run automatically on every Pull Request.
+
+**Business Impact**:
+- ✅ **Reliability**: Catch regressions before they reach production.
+- ✅ **Confidence**: Developers can refactor and add features without fear.
+- ✅ **Auditability**: Tests serve as living documentation of expected behavior.
+- ✅ **CI/CD Enablement**: Required by Issue #19 (GitHub Actions Pipeline).
+
+---
+
+### 🎯 **Technical Requirements**
+
+#### **1. Unit Tests (Jest)**
+Test isolated service logic without hitting the database:
+
+| Service | Key Tests |
+|---------|-----------|
+| `AuthService` | `register()` - email uniqueness, ADMIN prevention, password hashing |
+| `AuthService` | `validateUser()` - PENDENTE/REJEITADO users are blocked |
+| `PlantoesService` | `create()` - date validation, hours calculation |
+| `PagamentosService` | `calcularMes()` - valorBruto, valorLiquido, taxaPlataforma |
+| `PagamentosService` | `processar()` - status transition guards |
+
+#### **2. Integration / E2E Tests (Jest + Supertest)**
+Test the full HTTP request-response cycle against a real (test) database:
+
+| Endpoint | Scenario |
+|----------|----------|
+| `POST /auth/register` | 201 Created for valid data |
+| `POST /auth/login` | 401 for PENDENTE user, 200 for APROVADO |
+| `POST /plantoes` | 201 Created, hours calculated correctly |
+| `PATCH /plantoes/:id/status` | Valid status transitions only |
+| `POST /pagamentos/calcular-mes` | Correct financial calculations |
+
+#### **3. Test Database Strategy**
+- Use a separate `.env.test` file pointing to a dedicated `carehub_test_db`.
+- Run `prisma migrate reset` before each test suite to ensure a clean state.
+
+---
+
+### 🛠️ **Implementation Plan**
+
+**Step 1**: Configure Jest for unit and e2e test environments.
+- Create `src/auth/auth.service.spec.ts`.
+- Create `src/plantoes/plantoes.service.spec.ts`.
+- Create `src/pagamentos/pagamentos.service.spec.ts`.
+
+**Step 2**: Mock the `DatabaseService` (Prisma Client) using Jest mock factories.
+
+**Step 3**: Write integration tests using `@nestjs/testing` + `supertest`.
+- Create `test/auth.e2e-spec.ts`.
+- Create `test/plantoes.e2e-spec.ts`.
+- Create `test/pagamentos.e2e-spec.ts`.
+
+**Step 4**: Configure a test database (`carehub_test_db`).
+- Add `.env.test` with `DATABASE_URL` pointing to the test DB.
+- Add `"test:e2e": "jest --config ./test/jest-e2e.json"` script.
+
+**Step 5**: Ensure `npm run test` and `npm run test:e2e` both pass with zero failures.
+
+---
+
+### ✅ **Acceptance Criteria**
+
+- [ ] Jest is configured for both unit and e2e testing.
+- [ ] Unit tests exist for `AuthService`, `PlantoesService`, and `PagamentosService`.
+- [ ] E2E tests cover login, shift creation, and payment calculation flows.
+- [ ] All tests pass with `npm run test` and `npm run test:e2e`.
+- [ ] Test coverage is ≥ 70% for tested modules.
+- [ ] A dedicated test database is isolated from the development database.
+
+---
+
+### 📦 **Files to Create**
+
+- `backend/src/auth/auth.service.spec.ts`
+- `backend/src/plantoes/plantoes.service.spec.ts`
+- `backend/src/pagamentos/pagamentos.service.spec.ts`
+- `backend/test/auth.e2e-spec.ts`
+- `backend/test/plantoes.e2e-spec.ts`
+- `backend/test/pagamentos.e2e-spec.ts`
+- `backend/.env.test`
+
+---
+
+### 🔗 **Related Issues**
+
+- Depends on: Issue #2 (Auth Module) ✅
+- Depends on: Issue #7 (Plantões Module) ✅
+- Depends on: Issue #15 (Payments Module) ✅
+- Depends on: Issue #17 (DB Normalization) ✅
+- Blocks: Issue #19 (CI/CD Pipeline)
+- Enables: Issue #21 (Mercado Pago Integration)
+
+---
+
 ## Labels Reference
 
 - **Infrastructure:** Project setup, database, Docker
@@ -735,6 +853,6 @@ While CareHub has basic list views and a monthly payment report, the administrat
 
 ---
 
-**Last Updated:** February 18, 2026  
-**Version:** 2.1.0  
-**Current Sprint:** Week 4
+**Last Updated:** February 25, 2026  
+**Version:** 2.2.0  
+**Current Sprint:** Week 5
