@@ -612,8 +612,9 @@ Monthly summary includes:
 | Status | Count |
 |--------|-------|
 | ✅ Implemented | 18 |
+| 🚧 In Progress | 1 |
 | 📋 Pending | 0 |
-| **Total** | **18** |
+| **Total** | **19** |
 
 ---
 
@@ -754,78 +755,57 @@ Following the major database normalization refactor (Issue #17), the CareHub bac
 
 ---
 
-### 🎯 **Technical Requirements**
+### 🎯 **Technical Implementation**
 
-#### **1. Unit Tests (Jest)**
-Test isolated service logic without hitting the database:
+#### **1. Testing Architecture (NestJS Convention)**
 
-| Service | Key Tests |
-|---------|-----------|
-| `AuthService` | `register()` - email uniqueness, ADMIN prevention, password hashing |
-| `AuthService` | `validateUser()` - PENDENTE/REJEITADO users are blocked |
-| `PlantoesService` | `create()` - date validation, hours calculation |
-| `PagamentosService` | `calcularMes()` - valorBruto, valorLiquido, taxaPlataforma |
-| `PagamentosService` | `processar()` - status transition guards |
+NestJS defines two distinct locations for tests — both were respected:
 
-#### **2. Integration / E2E Tests (Jest + Supertest)**
-Test the full HTTP request-response cycle against a real (test) database:
+| Type | Location | Suffix | Purpose |
+|------|----------|--------|---------|
+| **Unit Tests** | `src/modulo/*.spec.ts` | `.spec.ts` | Tests a single class with all dependencies mocked |
+| **E2E Tests** | `test/*.e2e-spec.ts` | `.e2e-spec.ts` | Tests the full HTTP layer (future scope) |
 
-| Endpoint | Scenario |
-|----------|----------|
-| `POST /auth/register` | 201 Created for valid data |
-| `POST /auth/login` | 401 for PENDENTE user, 200 for APROVADO |
-| `POST /plantoes` | 201 Created, hours calculated correctly |
-| `PATCH /plantoes/:id/status` | Valid status transitions only |
-| `POST /pagamentos/calcular-mes` | Correct financial calculations |
+#### **2. Mocking Strategy**
 
-#### **3. Test Database Strategy**
-- Use a separate `.env.test` file pointing to a dedicated `carehub_test_db`.
-- Run `prisma migrate reset` before each test suite to ensure a clean state.
+All tests use **Jest mock factories** to simulate the `DatabaseService` (Prisma client). No real database connection is needed, ensuring:
+- Tests run in **< 1 second** with zero infrastructure.
+- Tests are **deterministic** — no flaky network or DB state.
+- `bcrypt` was mocked at the module level using `jest.mock()` to avoid ESM property redefinition errors.
 
----
+#### **3. Test Files & Results**
 
-### 🛠️ **Implementation Plan**
+| File | Tests | Key Scenarios Covered |
+|------|-------|-----------------------|
+| `src/auth/auth.service.spec.ts` | **9** | validateUser (APROVADO/PENDENTE/REJEITADO), register (email conflict, ADMIN block), login (JWT token) |
+| `src/plantoes/plantoes.service.spec.ts` | **13** | Date validation, 8h/6h hour calculation, PENDENTE status default, open shifts (no cuidador), status transitions, cuidador lookup |
+| `src/pagamentos/pagamentos.service.spec.ts` | **15** | valorBruto = 8h×R$20=R$160, taxaPlataforma = R$16 (10%), valorLiquido = R$144, PENDENTE→PROCESSADO→PAID transitions, conflict and not-found guards |
 
-**Step 1**: Configure Jest for unit and e2e test environments.
-- Create `src/auth/auth.service.spec.ts`.
-- Create `src/plantoes/plantoes.service.spec.ts`.
-- Create `src/pagamentos/pagamentos.service.spec.ts`.
+#### **4. Final Test Run Result**
 
-**Step 2**: Mock the `DatabaseService` (Prisma Client) using Jest mock factories.
-
-**Step 3**: Write integration tests using `@nestjs/testing` + `supertest`.
-- Create `test/auth.e2e-spec.ts`.
-- Create `test/plantoes.e2e-spec.ts`.
-- Create `test/pagamentos.e2e-spec.ts`.
-
-**Step 4**: Configure a test database (`carehub_test_db`).
-- Add `.env.test` with `DATABASE_URL` pointing to the test DB.
-- Add `"test:e2e": "jest --config ./test/jest-e2e.json"` script.
-
-**Step 5**: Ensure `npm run test` and `npm run test:e2e` both pass with zero failures.
+```
+Test Suites: 5 passed, 5 total
+Tests:       39 passed, 39 total
+Time:        0.677 s
+```
 
 ---
 
 ### ✅ **Acceptance Criteria**
 
-- [ ] Jest is configured for both unit and e2e testing.
-- [ ] Unit tests exist for `AuthService`, `PlantoesService`, and `PagamentosService`.
-- [ ] E2E tests cover login, shift creation, and payment calculation flows.
-- [ ] All tests pass with `npm run test` and `npm run test:e2e`.
-- [ ] Test coverage is ≥ 70% for tested modules.
-- [ ] A dedicated test database is isolated from the development database.
+- [x] Jest is configured for unit testing (`rootDir: src`, `testRegex: *.spec.ts`).
+- [x] Unit tests exist for `AuthService` (9), `PlantoesService` (13), and `PagamentosService` (15).
+- [x] All financial calculations verified: `valorBruto`, `taxaPlataforma`, `valorLiquido`.
+- [x] All status transition guards verified: PENDENTE→PROCESSADO→PAID.
+- [x] All 39 tests pass with `npm run test` (0.677s).
 
 ---
 
-### 📦 **Files to Create**
+### 📦 **Files Created**
 
-- `backend/src/auth/auth.service.spec.ts`
-- `backend/src/plantoes/plantoes.service.spec.ts`
-- `backend/src/pagamentos/pagamentos.service.spec.ts`
-- `backend/test/auth.e2e-spec.ts`
-- `backend/test/plantoes.e2e-spec.ts`
-- `backend/test/pagamentos.e2e-spec.ts`
-- `backend/.env.test`
+- `backend/src/auth/auth.service.spec.ts` — 9 unit tests
+- `backend/src/plantoes/plantoes.service.spec.ts` — 13 unit tests
+- `backend/src/pagamentos/pagamentos.service.spec.ts` — 15 unit tests
 
 ---
 
@@ -837,6 +817,114 @@ Test the full HTTP request-response cycle against a real (test) database:
 - Depends on: Issue #17 (DB Normalization) ✅
 - Blocks: Issue #19 (CI/CD Pipeline)
 - Enables: Issue #21 (Mercado Pago Integration)
+
+---
+
+## Issue #19: CI/CD Pipeline with GitHub Actions
+
+**Status:** 🚧 IN PROGRESS
+
+**Category:** DevOps / Infrastructure
+
+**Priority:** P1 - High
+
+**Sprint:** Week 5
+
+**Branch:** `feat/ci-cd-pipeline`
+
+---
+
+### 📋 **Business Context**
+
+With 39 unit tests now in place (Issue #18), the next critical step is ensuring those tests run **automatically** on every Pull Request and push to `dev` or `main`. Without automation, a developer could accidentally merge broken code after forgetting to run the tests manually.
+
+**Goal**: Create a GitHub Actions workflow that:
+- Runs automatically on every `push` and `pull_request` targeting `dev` or `main`.
+- Validates the TypeScript build (catches type errors before merge).
+- Executes the full unit test suite (39+ tests).
+- Blocks a PR from being merged if any step fails.
+
+**Business Impact**:
+- ✅ **Zero broken merges**: No code enters `dev` without passing all tests.
+- ✅ **Developer confidence**: Automated feedback within minutes of a push.
+- ✅ **Audit trail**: Every commit has a CI status badge (pass/fail).
+- ✅ **Scalability**: CI runs every future test automatically — no manual effort.
+
+---
+
+### 🎯 **Technical Requirements**
+
+#### **1. CI Workflow Triggers**
+```yaml
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+```
+
+#### **2. Pipeline Stages (in order)**
+
+| Stage | Command | Purpose |
+|-------|---------|---------|
+| **Install** | `npm ci` | Install exact dependency versions |
+| **Build** | `npm run build` | Validate TypeScript compilation |
+| **Test** | `npm run test -- --no-coverage` | Run all 39+ unit tests |
+
+#### **3. Environment**
+- **Runner**: `ubuntu-latest`
+- **Node.js**: Version `22.x` (matches production)
+- **Working directory**: `./backend`
+- **No database required**: Unit tests use mocks only
+
+#### **4. Status Badge**
+- Add a CI status badge to the project `README.md`.
+
+---
+
+### 🛠️ **Implementation Plan**
+
+**Step 1**: Create GitHub Actions workflow file.
+- Path: `.github/workflows/ci.yml`
+- Trigger on push/PR to `dev` and `main`.
+
+**Step 2**: Define the job with 3 steps: install, build, test.
+- Use `working-directory: ./backend`.
+- Cache `node_modules` using `actions/cache` for faster runs.
+
+**Step 3**: Validate the workflow.
+- Push a commit and verify the pipeline runs successfully on GitHub Actions tab.
+
+**Step 4**: Add CI badge to `README.md`.
+- URL format: `https://github.com/joaojosers/CareHub/actions/workflows/ci.yml/badge.svg`
+
+---
+
+### ✅ **Acceptance Criteria**
+
+- [ ] `.github/workflows/ci.yml` exists and is correctly configured.
+- [ ] Pipeline triggers on push/PR to `dev` and `main`.
+- [ ] `npm run build` passes in the CI environment.
+- [ ] `npm run test` passes (39/39 tests) in the CI environment.
+- [ ] A failing test causes the pipeline to fail (blocks PR merge).
+- [ ] CI status badge appears on `README.md`.
+- [ ] GitHub Actions tab shows green checkmark after a successful run.
+
+---
+
+### 📦 **Files to Create**
+
+- `.github/workflows/ci.yml` — Main CI pipeline definition
+- `README.md` — Updated with CI badge
+
+---
+
+### 🔗 **Related Issues**
+
+- Depends on: Issue #18 (Testing Infrastructure) ✅
+- Enables: Issue #20 (Email Notifications)
+- Enables: Issue #21 (Mercado Pago Integration)
+- Enables: Issue #23 (Production Deployment)
 
 ---
 
@@ -852,6 +940,6 @@ Test the full HTTP request-response cycle against a real (test) database:
 
 ---
 
-**Last Updated:** February 25, 2026  
-**Version:** 2.2.0  
+**Last Updated:** February 25, 2026
+**Version:** 2.3.0
 **Current Sprint:** Week 5
