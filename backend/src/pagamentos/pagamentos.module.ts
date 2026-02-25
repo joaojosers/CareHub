@@ -7,6 +7,8 @@ import { DatabaseModule } from '../database/database.module';
   imports: [DatabaseModule],
   controllers: [PagamentosController],
   providers: [PagamentosService],
+  exports: [PagamentosService], // permite usar o serviço em outros módulos
 })
 export class PagamentosModule {}
+
 

@@ -5,6 +5,7 @@
     "@nestjs/core": "^11.1.13",
     "@nestjs/swagger": "^11.2.6",
     "@prisma/client": "^7.4.0",
+    "axios": "^1.13.5",
     "bcrypt": "^6.0.0",
     "qrcode": "^1.5.4"
   },

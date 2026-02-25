@@ -14,7 +14,7 @@ import { PagamentosModule } from './pagamentos/pagamentos.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      isGlobal: true, // disponibiliza variáveis de ambiente globalmente
     }),
     DatabaseModule,
     AuthModule,
@@ -28,4 +28,4 @@ import { PagamentosModule } from './pagamentos/pagamentos.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -2,11 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import * as QRCode from 'qrcode';
 
+export enum StatusPagamento {
+  Pendente = 'Pendente',
+  Concluido = 'Concluido',
+  Cancelado = 'Cancelado',
+}
+
 @Injectable()
 export class PagamentosService {
   constructor(private readonly db: DatabaseService) {}
 
-  async gerarPix(cuidadorId: string) {
+  async gerarPix(cuidadorId: string, valor: number) {
     const cuidador = await this.db.client.cuidadorDetalhes.findUnique({
       where: { id: cuidadorId },
       include: { user: true },
@@ -20,17 +26,25 @@ export class PagamentosService {
       banco?: string;
       agencia?: string;
       conta?: string;
+      chavePix?: string;
     };
 
-    const payloadPix = `00020126580014BR.GOV.BCB.PIX0136${dadosBancarios?.conta ?? ''}5204000053039865406100.005802BR5913${cuidador.user.nome}6009RIO DE JANEIRO62070503***6304ABCD`;
+    if (!dadosBancarios?.chavePix) {
+      throw new NotFoundException('Chave Pix não encontrada para este cuidador');
+    }
+
+    // Payload Pix simplificado (ideal usar uma lib específica para Pix)
+    const payloadPix = `00020126580014BR.GOV.BCB.PIX0136${dadosBancarios.chavePix}5204000053039865406${valor.toFixed(
+      2,
+    )}5802BR5913${cuidador.user.nome}6009RIO DE JANEIRO62070503***6304ABCD`;
 
     const qrCodeBase64 = await QRCode.toDataURL(payloadPix);
 
     const pagamento = await this.db.client.pagamento.create({
       data: {
         cuidadorId: cuidador.id,
-        valor: 100.0,
-        status: 'Pendente',
+        valor,
+        status: StatusPagamento.Pendente,
         payload: payloadPix,
       },
     });
@@ -69,7 +83,7 @@ export class PagamentosService {
     return pagamento;
   }
 
-  async atualizarStatus(id: number, status: string) {
+  async atualizarStatus(id: number, status: StatusPagamento) {
     return this.db.client.pagamento.update({
       where: { id },
       data: { status },
