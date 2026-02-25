@@ -612,8 +612,9 @@ Monthly summary includes:
 | Status | Count |
 |--------|-------|
 | ✅ Implemented | 19 |
+| 🚧 In Progress | 1 |
 | 📋 Pending | 0 |
-| **Total** | **19** |
+| **Total** | **20** |
 
 ---
 
@@ -927,6 +928,126 @@ on:
 
 ---
 
+## Issue #20: Email Notifications Service
+
+**Status:** 🚧 IN PROGRESS
+
+**Category:** Feature Implementation / Integration
+
+**Priority:** P2 - Medium
+
+**Sprint:** Week 6
+
+**Branch:** `feat/email-notifications`
+
+---
+
+### 📋 **Business Context**
+
+Atualmente o CareHub não notifica nenhum usuário sobre eventos importantes do sistema. Cuidadores não sabem quando são aprovados, familiares não recebem confirmação quando um plantão é agendado, e pagamentos são confirmados sem evidência por e-mail.
+
+**Goal**: Implementar um serviço de notificações por e-mail que dispare automaticamente nos eventos críticos do negócio.
+
+**Eventos que disparam e-mail:**
+
+| Evento | Destinatário | E-mail |
+|--------|-------------|--------|
+| Cuidador aprovado pelo admin | Cuidador | Boas-vindas + próximos passos |
+| Cuidador rejeitado | Cuidador | Notificação de rejeição |
+| Novo plantão criado | Cuidador atribuído | Detalhes do plantão |
+| Plantão aprovado | Familiar | Confirmação de serviço |
+| Pagamento confirmado | Cuidador | Comprovante com valor líquido |
+
+**Business Impact**:
+- ✅ **Profissionalismo** — Sistema que notifica automaticamente transmite confiança.
+- ✅ **Transparência** — Todos os stakeholders estão informados em tempo real.
+- ✅ **Retenção** — Cuidadores engajados são mais propensos a permanecer na plataforma.
+
+---
+
+### 🎯 **Technical Requirements**
+
+#### **1. Tecnologia**
+- **Nodemailer** — biblioteca Node.js para envio de e-mails via SMTP.
+- **Gmail SMTP** — para desenvolvimento (gratuito, fácil de configurar).
+- Configuração via variáveis de ambiente (`.env`).
+
+#### **2. Estrutura do Módulo**
+
+```
+src/
+└── mail/
+    ├── mail.module.ts
+    ├── mail.service.ts
+    └── templates/
+        ├── cuidador-aprovado.hbs
+        ├── cuidador-rejeitado.hbs
+        ├── novo-plantao.hbs
+        └── pagamento-confirmado.hbs
+```
+
+#### **3. Variáveis de Ambiente**
+```env
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=carehub@gmail.com
+MAIL_PASS=app_password_here
+MAIL_FROM="CareHub <carehub@gmail.com>"
+```
+
+---
+
+### 🛠️ **Implementation Plan**
+
+**Commit 1**: Instalar dependências e criar `MailModule` + `MailService`.
+
+**Commit 2**: Implementar método `sendCuidadorAprovado()` e `sendCuidadorRejeitado()`.
+
+**Commit 3**: Integrar envio de e-mail no fluxo de aprovação de usuários (`UsersService`).
+
+**Commit 4**: Implementar `sendNovoPlantao()` e integrar no `PlantoesService`.
+
+**Commit 5**: Implementar `sendPagamentoConfirmado()` e integrar no `PagamentosService`.
+
+---
+
+### ✅ **Acceptance Criteria**
+
+- [ ] `MailModule` criado e importado no `AppModule`.
+- [ ] `MailService` com métodos para cada evento de negócio.
+- [ ] E-mails disparados automaticamente nos eventos corretos.
+- [ ] Variáveis de ambiente documentadas no `.env.example`.
+- [ ] Falha no envio de e-mail não quebra o fluxo principal (try/catch).
+- [ ] CI pipeline continua verde após as mudanças.
+
+---
+
+### 📦 **Files to Create**
+
+- `backend/src/mail/mail.module.ts`
+- `backend/src/mail/mail.service.ts`
+- `backend/.env.example` — variáveis de e-mail documentadas
+
+### 📦 **Files to Modify**
+
+- `backend/src/app.module.ts` — importar `MailModule`
+- `backend/src/users/users.service.ts` — disparar e-mail na aprovação
+- `backend/src/plantoes/plantoes.service.ts` — disparar e-mail no novo plantão
+- `backend/src/pagamentos/pagamentos.service.ts` — disparar e-mail na confirmação
+
+---
+
+### 🔗 **Related Issues**
+
+- Depends on: Issue #2 (Auth / Users Module) ✅
+- Depends on: Issue #7 (Plantões Module) ✅
+- Depends on: Issue #15 (Payments Module) ✅
+- Depends on: Issue #19 (CI/CD Pipeline) ✅
+- Enables: Issue #21 (Mercado Pago Integration)
+- Enables: Issue #23 (Production Deployment)
+
+---
+
 ## Labels Reference
 
 - **Infrastructure:** Project setup, database, Docker
@@ -940,5 +1061,5 @@ on:
 ---
 
 **Last Updated:** February 25, 2026
-**Version:** 2.3.0
-**Current Sprint:** Week 5
+**Version:** 2.4.0
+**Current Sprint:** Week 6
