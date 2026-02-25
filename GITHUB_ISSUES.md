@@ -928,7 +928,7 @@ on:
 
 ---
 
-## Issue #20: Email Notifications Service
+## Issue #21: Integração Mercado Pago
 
 **Status:** 🚧 IN PROGRESS
 
@@ -938,112 +938,108 @@ on:
 
 **Sprint:** Week 6
 
-**Branch:** `feat/email-notifications`
+**Branch:** `feat/mercado-pago`
 
 ---
 
 ### 📋 **Business Context**
 
-Atualmente o CareHub não notifica nenhum usuário sobre eventos importantes do sistema. Cuidadores não sabem quando são aprovados, familiares não recebem confirmação quando um plantão é agendado, e pagamentos são confirmados sem evidência por e-mail.
+O módulo de Pagamentos (Issue #15) já calcula e registra pagamentos internamente. Porém, a transferência real de dinheiro para os cuidadores ainda é feita de forma manual fora do sistema. A integração com o Mercado Pago automatiza a movimentação financeira real via Pix, eliminando processos manuais e aumentando a confiança dos cuidadores na plataforma.
 
-**Goal**: Implementar um serviço de notificações por e-mail que dispare automaticamente nos eventos críticos do negócio.
-
-**Eventos que disparam e-mail:**
-
-| Evento | Destinatário | E-mail |
-|--------|-------------|--------|
-| Cuidador aprovado pelo admin | Cuidador | Boas-vindas + próximos passos |
-| Cuidador rejeitado | Cuidador | Notificação de rejeição |
-| Novo plantão criado | Cuidador atribuído | Detalhes do plantão |
-| Plantão aprovado | Familiar | Confirmação de serviço |
-| Pagamento confirmado | Cuidador | Comprovante com valor líquido |
+**Goal**: Integrar o SDK do Mercado Pago para:
+- Processar pagamentos reais via Pix para cuidadores.
+- Receber notificações automáticas de confirmação via webhooks.
+- Gerar comprovantes de transação com ID externo.
 
 **Business Impact**:
-- ✅ **Profissionalismo** — Sistema que notifica automaticamente transmite confiança.
-- ✅ **Transparência** — Todos os stakeholders estão informados em tempo real.
-- ✅ **Retenção** — Cuidadores engajados são mais propensos a permanecer na plataforma.
+- ✅ **Automação financeira** — Elimina transferências manuais.
+- ✅ **Rastreabilidade** — Cada pagamento tem um ID externo do Mercado Pago.
+- ✅ **Confiança** — Cuidadores recebem com segurança e rapidez.
+- ✅ **Conformidade** — Integração com gateway regulamentado no Brasil.
 
 ---
 
 ### 🎯 **Technical Requirements**
 
-#### **1. Tecnologia**
-- **Nodemailer** — biblioteca Node.js para envio de e-mails via SMTP.
-- **Gmail SMTP** — para desenvolvimento (gratuito, fácil de configurar).
-- Configuração via variáveis de ambiente (`.env`).
-
-#### **2. Estrutura do Módulo**
-
+#### **1. SDK e Configuração**
+```bash
+npm install mercadopago
 ```
-src/
-└── mail/
-    ├── mail.module.ts
-    ├── mail.service.ts
-    └── templates/
-        ├── cuidador-aprovado.hbs
-        ├── cuidador-rejeitado.hbs
-        ├── novo-plantao.hbs
-        └── pagamento-confirmado.hbs
-```
-
-#### **3. Variáveis de Ambiente**
 ```env
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USER=carehub@gmail.com
-MAIL_PASS=app_password_here
-MAIL_FROM="CareHub <carehub@gmail.com>"
+MP_ACCESS_TOKEN=APP_USR-...
+MP_WEBHOOK_SECRET=seu_secret_aqui
 ```
+
+#### **2. Fluxo de Pagamento**
+
+```
+Admin confirma pagamento (PATCH /pagamentos/:id/confirmar)
+         ↓
+PagamentosService → MercadoPagoService.criarPagamentoPix()
+         ↓
+MP retorna: { id, qr_code, qr_code_base64 }
+         ↓
+Pagamento salvo com mpPaymentId + status PROCESSADO
+         ↓
+Mercado Pago envia webhook POST /pagamentos/webhook
+         ↓
+Backend valida assinatura → atualiza status para PAID
+```
+
+#### **3. Endpoints**
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/pagamentos/webhook` | Recebe notificações do Mercado Pago |
+| Existente | `/pagamentos/:id/confirmar` | Agora aciona o MP internamente |
 
 ---
 
 ### 🛠️ **Implementation Plan**
 
-**Commit 1**: Instalar dependências e criar `MailModule` + `MailService`.
+**Commit 1**: Instalar SDK e criar `MercadoPagoService` + `MercadoPagoModule`.
 
-**Commit 2**: Implementar método `sendCuidadorAprovado()` e `sendCuidadorRejeitado()`.
+**Commit 2**: Implementar `criarPagamentoPix()` — gera a cobrança Pix via MP.
 
-**Commit 3**: Integrar envio de e-mail no fluxo de aprovação de usuários (`UsersService`).
+**Commit 3**: Criar webhook controller `POST /pagamentos/webhook` com validação de assinatura.
 
-**Commit 4**: Implementar `sendNovoPlantao()` e integrar no `PlantoesService`.
+**Commit 4**: Integrar `MercadoPagoService` no `PagamentosService.confirmarPagamento()`.
 
-**Commit 5**: Implementar `sendPagamentoConfirmado()` e integrar no `PagamentosService`.
+**Commit 5**: Adicionar campo `mpPaymentId` no schema Prisma + migration.
 
 ---
 
 ### ✅ **Acceptance Criteria**
 
-- [ ] `MailModule` criado e importado no `AppModule`.
-- [ ] `MailService` com métodos para cada evento de negócio.
-- [ ] E-mails disparados automaticamente nos eventos corretos.
-- [ ] Variáveis de ambiente documentadas no `.env.example`.
-- [ ] Falha no envio de e-mail não quebra o fluxo principal (try/catch).
-- [ ] CI pipeline continua verde após as mudanças.
+- [ ] SDK `mercadopago` instalado e configurado via `.env`.
+- [ ] `MercadoPagoService` com método `criarPagamentoPix()`.
+- [ ] Webhook `POST /pagamentos/webhook` recebe e valida notificações MP.
+- [ ] Campo `mpPaymentId` salvo no banco após criação da cobrança.
+- [ ] Falha na API do MP não quebra o fluxo (try/catch + log).
+- [ ] CI continua verde após as mudanças.
 
 ---
 
 ### 📦 **Files to Create**
 
-- `backend/src/mail/mail.module.ts`
-- `backend/src/mail/mail.service.ts`
-- `backend/.env.example` — variáveis de e-mail documentadas
+- `backend/src/mercado-pago/mercado-pago.module.ts`
+- `backend/src/mercado-pago/mercado-pago.service.ts`
 
 ### 📦 **Files to Modify**
 
-- `backend/src/app.module.ts` — importar `MailModule`
-- `backend/src/users/users.service.ts` — disparar e-mail na aprovação
-- `backend/src/plantoes/plantoes.service.ts` — disparar e-mail no novo plantão
-- `backend/src/pagamentos/pagamentos.service.ts` — disparar e-mail na confirmação
+- `backend/prisma/schema.prisma` — adicionar `mpPaymentId` no modelo `Pagamento`
+- `backend/src/pagamentos/pagamentos.service.ts` — integrar MP no confirmar
+- `backend/src/pagamentos/pagamentos.controller.ts` — adicionar rota webhook
+- `backend/src/app.module.ts` — importar `MercadoPagoModule`
 
 ---
 
 ### 🔗 **Related Issues**
 
-- Depends on: Issue #2 (Auth / Users Module) ✅
-- Depends on: Issue #7 (Plantões Module) ✅
 - Depends on: Issue #15 (Payments Module) ✅
+- Depends on: Issue #17 (DB Normalization) ✅
+- Depends on: Issue #18 (Testing Infrastructure) ✅
 - Depends on: Issue #19 (CI/CD Pipeline) ✅
-- Enables: Issue #21 (Mercado Pago Integration)
 - Enables: Issue #23 (Production Deployment)
 
 ---
@@ -1063,3 +1059,5 @@ MAIL_FROM="CareHub <carehub@gmail.com>"
 **Last Updated:** February 25, 2026
 **Version:** 2.4.0
 **Current Sprint:** Week 6
+
+
