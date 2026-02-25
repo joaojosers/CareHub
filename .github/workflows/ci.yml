@@ -36,10 +36,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ── 4. Build (TypeScript compilation) ───────────────────────────────────
+      # ── 4. Generate Prisma Client (required for TypeScript types) ─────────
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      # ── 5. Build (TypeScript compilation) ───────────────────────────────────
       - name: Build
         run: npm run build
 
-      # ── 5. Run unit tests ────────────────────────────────────────────────────
+      # ── 6. Run unit tests ────────────────────────────────────────────────────
       - name: Run unit tests
         run: npm run test -- --no-coverage --forceExit
