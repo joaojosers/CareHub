@@ -1,0 +1,73 @@
+Estrutura de pastas e arquivos do Projeto Cuidadores CareHub
+
+src
+│   App.jsx
+│   main.jsx
+│
+├───assets
+│   └───images
+├───components
+│   │   Logo.jsx
+│   │   ProtectedRoute.jsx
+│   │
+│   ├───layout
+│   │       Footer.jsx
+│   │       header.css
+│   │       Header.jsx
+│   │       MainLayout.jsx
+│   │       Sidebar.jsx
+│   │
+│   └───ui
+│           Button.jsx
+│           Card.jsx
+│           StatusBadge.jsx
+│           Table.jsx
+│
+├───contexts
+│       AuthContext.jsx
+│
+├───pages
+│   │   NotFound.jsx
+│   │
+│   ├───admin
+│   │       AdminHoras.jsx
+│   │       cuidadores.css
+│   │       Cuidadores.jsx
+│   │       DashboardAdmin.jsx
+│   │       DetalheCuidador.jsx
+│   │       DetalhePaciente.jsx
+│   │       Pacientes.jsx
+│   │       Relatorios.jsx
+│   │
+│   ├───auth
+│   │       Cadastro.jsx
+│   │       EsqueceuSenha.jsx
+│   │       Login.jsx
+│   │       RedefinirSenha.jsx
+│   │
+│   ├───cuidador
+│   │       DashboardCuidador.jsx
+│   │       LancarHoras.jsx
+│   │       MeusPacientes.jsx
+│   │       Relatorios.jsx
+│   │
+│   └───familiar
+│           DashboardFamiliar.jsx
+│           Pacientes.jsx
+│           Relatorios.jsx
+│
+├───routes
+│       AppRoutes.jsx
+│
+├───services
+│       api.js
+│       authService.js
+│       userService.js
+│
+├───styles
+│       global.css
+│       layout.css
+│       login.css
+│
+└───utils
+        mockAuth.js

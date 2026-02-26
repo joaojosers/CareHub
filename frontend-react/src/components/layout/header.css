@@ -1,0 +1,36 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 30px;
+}
+
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-text {
+  font-size: 15px;
+  color: #e2e8f0;
+}
+
+.welcome-role {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.logout-btn {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  transform: scale(1.05);
+}
