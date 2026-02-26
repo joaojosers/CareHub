@@ -3,17 +3,24 @@ import {
   BadRequestException,
   NotFoundException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PagamentoStatus, MetodoPagamento, Prisma } from '@prisma/client';
 import { CreatePagamentoDto } from './dto/create-pagamento.dto';
 import { ConfirmarPagamentoDto } from './dto/confirmar-pagamento.dto';
+import { MercadoPagoService } from '../mercado-pago/mercado-pago.service';
 
 const TAXA_PLATAFORMA = 0.10; // 10% platform fee
 
 @Injectable()
 export class PagamentosService {
-  constructor(private databaseService: DatabaseService) { }
+  private readonly logger = new Logger(PagamentosService.name);
+
+  constructor(
+    private databaseService: DatabaseService,
+    private mercadoPagoService: MercadoPagoService,
+  ) { }
 
   /**
    * Creates a payment for a specific approved shift
@@ -191,7 +198,7 @@ export class PagamentosService {
   }
 
   /**
-   * Confirm payment with proof (receipt)
+   * Confirm payment with proof (receipt) and trigger Pix via Mercado Pago
    * Transition: PROCESSADO → PAID
    */
   async confirmarPagamento(
@@ -206,6 +213,38 @@ export class PagamentosService {
       );
     }
 
+    // ── Trigger Mercado Pago Pix payment ──────────────────────────────────
+    let mpData: { mpPaymentId?: string; mpQrCode?: string; mpQrCodeBase64?: string; mpTicketUrl?: string } = {};
+
+    if (pagamento.metodoPagamento === MetodoPagamento.PIX) {
+      try {
+        const cuidador = pagamento.cuidador;
+        const user = cuidador?.user;
+
+        const result = await this.mercadoPagoService.criarPagamentoPix(
+          cuidador?.id || '',
+          user?.nome || 'Cuidador CareHub',
+          user?.email || 'cuidador@carehub.com',
+          user?.cpf || '00000000000',
+          Number(pagamento.valorLiquido),
+          pagamento.id,
+        );
+
+        mpData = {
+          mpPaymentId: result.mpPaymentId,
+          mpQrCode: result.qrCode,
+          mpQrCodeBase64: result.qrCodeBase64,
+          mpTicketUrl: result.ticketUrl,
+        };
+
+        this.logger.log(`✅ Pix gerado via Mercado Pago para pagamento ${id}`);
+      } catch (error) {
+        // MP failure does NOT block the payment confirmation — log and continue
+        this.logger.error(`⚠️  MP Pix creation failed for ${id}: ${error.message}. Proceeding without Pix.`);
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     return this.databaseService.client.pagamento.update({
       where: { id },
       data: {
@@ -215,12 +254,72 @@ export class PagamentosService {
           : new Date(),
         numeroComprovante: dto.numeroComprovante,
         atualizadoEm: new Date(),
+        ...mpData,
       },
       include: {
         plantao: { include: { paciente: true } },
         cuidador: { include: { user: true } },
       },
     });
+  }
+
+  /**
+   * Process Mercado Pago webhook notification
+   * Called by POST /pagamentos/webhook
+   * Updates payment status when MP confirms the Pix was paid
+   */
+  async processarWebhookMP(
+    xSignature: string,
+    xRequestId: string,
+    dataId: string,
+    body: any,
+  ): Promise<{ received: boolean }> {
+    // 1. Validate webhook authenticity
+    const isValid = this.mercadoPagoService.validateWebhookSignature(
+      xSignature,
+      xRequestId,
+      dataId,
+    );
+
+    if (!isValid) {
+      this.logger.warn('⚠️  Invalid MP webhook signature — ignoring');
+      return { received: false };
+    }
+
+    // 2. Only process payment events
+    if (body?.type !== 'payment') {
+      return { received: true };
+    }
+
+    const mpPaymentId = String(body?.data?.id);
+
+    // 3. Find our internal payment by MP ID
+    const pagamento = await this.databaseService.client.pagamento.findFirst({
+      where: { mpPaymentId },
+    });
+
+    if (!pagamento) {
+      this.logger.warn(`⚠️  Webhook: no internal payment found for mpPaymentId=${mpPaymentId}`);
+      return { received: true };
+    }
+
+    // 4. Query MP for actual status
+    const mpStatus = await this.mercadoPagoService.consultarPagamento(mpPaymentId);
+    this.logger.log(`📩 Webhook received: mpPaymentId=${mpPaymentId} status=${mpStatus}`);
+
+    // 5. Map MP status to our internal status
+    if (mpStatus === 'approved' && pagamento.status !== PagamentoStatus.PAID) {
+      await this.databaseService.client.pagamento.update({
+        where: { id: pagamento.id },
+        data: {
+          status: PagamentoStatus.PAID,
+          dataPagamento: new Date(),
+        },
+      });
+      this.logger.log(`✅ Payment ${pagamento.id} marked as PAID via webhook`);
+    }
+
+    return { received: true };
   }
 
   /**
