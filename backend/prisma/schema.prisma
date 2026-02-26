@@ -161,6 +161,10 @@ model Pagamento {
   metodoPagamento   MetodoPagamento  @default(PIX)
   dataPagamento     DateTime?
   numeroComprovante String?
+  mpPaymentId       String?          // Mercado Pago external payment ID
+  mpQrCode          String?          // Pix QR code string
+  mpQrCodeBase64    String?          // Pix QR code image (base64)
+  mpTicketUrl       String?          // Pix payment URL
   criadoEm          DateTime         @default(now())
   atualizadoEm      DateTime         @updatedAt
   
