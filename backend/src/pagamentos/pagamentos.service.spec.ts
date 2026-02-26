@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PagamentosService } from './pagamentos.service';
 import { DatabaseService } from '../database/database.service';
+import { MercadoPagoService } from '../mercado-pago/mercado-pago.service';
 import {
     BadRequestException,
     ConflictException,
@@ -15,12 +16,26 @@ const mockDb = {
         plantao: { findUnique: jest.fn() },
         pagamento: {
             findUnique: jest.fn(),
+            findFirst: jest.fn(),
             findMany: jest.fn(),
             create: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
         },
     },
+};
+
+// Mock MercadoPagoService — prevents real HTTP calls to MP API in unit tests
+const mockMercadoPago = {
+    criarPagamentoPix: jest.fn().mockResolvedValue({
+        mpPaymentId: 'mp-test-123',
+        qrCode: 'qr-code-string',
+        qrCodeBase64: 'base64-string',
+        ticketUrl: 'https://mp.com/ticket',
+        expirationDate: new Date().toISOString(),
+    }),
+    validateWebhookSignature: jest.fn().mockReturnValue(true),
+    consultarPagamento: jest.fn().mockResolvedValue('approved'),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -64,11 +79,20 @@ describe('PagamentosService', () => {
             providers: [
                 PagamentosService,
                 { provide: DatabaseService, useValue: mockDb },
+                { provide: MercadoPagoService, useValue: mockMercadoPago },
             ],
         }).compile();
 
         service = module.get<PagamentosService>(PagamentosService);
         jest.clearAllMocks();
+        // Re-apply default mock after clearAllMocks
+        mockMercadoPago.criarPagamentoPix.mockResolvedValue({
+            mpPaymentId: 'mp-test-123',
+            qrCode: 'qr-code-string',
+            qrCodeBase64: 'base64-string',
+            ticketUrl: 'https://mp.com/ticket',
+            expirationDate: new Date().toISOString(),
+        });
     });
 
     // ── create() ─────────────────────────────────────────────────────────────
