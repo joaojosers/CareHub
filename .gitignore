@@ -49,3 +49,6 @@ yarn-debug.log*
 frontend/.next/
 frontend/next-env.d.ts
 frontend/node_modules/
+
+# Docker local overrides (developer-specific, not committed)
+docker-compose.override.yml
