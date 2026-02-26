@@ -611,8 +611,7 @@ Monthly summary includes:
 
 | Status | Count |
 |--------|-------|
-| ✅ Implemented | 19 |
-| 🚧 In Progress | 1 |
+| ✅ Implemented | 20 |
 | 📋 Pending | 0 |
 | **Total** | **20** |
 
@@ -930,7 +929,7 @@ on:
 
 ## Issue #21: Integração Mercado Pago
 
-**Status:** 🚧 IN PROGRESS
+**Status:** ✅ IMPLEMENTED
 
 **Category:** Feature Implementation / Integration
 
@@ -959,78 +958,84 @@ O módulo de Pagamentos (Issue #15) já calcula e registra pagamentos internamen
 
 ---
 
-### 🎯 **Technical Requirements**
+### 🎯 **Technical Implementation**
 
-#### **1. SDK e Configuração**
-```bash
-npm install mercadopago
-```
+#### **1. Ambiente: Sandbox Mercado Pago**
+
+**Sandbox** é o ambiente de testes oficial do Mercado Pago. Funciona com a mesma API e estrutura de dados do ambiente de produção, mas **nenhum dinheiro real é movimentado**. É o ponto de partida correto antes do deploy.
+
+| Funcionalidade | Sandbox | Produção |
+|---|---|---|
+| Criar cobrança Pix | ✅ (simulada) | ✅ (real) |
+| QR Code gerado | ✅ (não pagável) | ✅ (pagável via app bancário) |
+| Webhook recebido | ✅ (manual via painel MP) | ✅ (automático após pagamento) |
+| Dinheiro transferido | ❌ (fictício) | ✅ (real) |
+| Credenciais | `TEST-...` | `APP_USR-...` |
+
+Como está configurado no `backend/.env`:
 ```env
-MP_ACCESS_TOKEN=APP_USR-...
-MP_WEBHOOK_SECRET=seu_secret_aqui
+MP_ACCESS_TOKEN=TEST-xxxx...   # token sandbox (padrão)
+# MP_WEBHOOK_SECRET=           # não configurado → validação desativada no sandbox
 ```
 
-#### **2. Fluxo de Pagamento**
-
+**Para ir a produção (zero mudança no código):**
+```env
+MP_ACCESS_TOKEN=APP_USR-...    # token real da conta MP aprovada
+MP_WEBHOOK_SECRET=...          # configurado no painel do Mercado Pago
 ```
-Admin confirma pagamento (PATCH /pagamentos/:id/confirmar)
-         ↓
-PagamentosService → MercadoPagoService.criarPagamentoPix()
-         ↓
-MP retorna: { id, qr_code, qr_code_base64 }
-         ↓
-Pagamento salvo com mpPaymentId + status PROCESSADO
-         ↓
-Mercado Pago envia webhook POST /pagamentos/webhook
-         ↓
-Backend valida assinatura → atualiza status para PAID
-```
-
-#### **3. Endpoints**
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `POST` | `/pagamentos/webhook` | Recebe notificações do Mercado Pago |
-| Existente | `/pagamentos/:id/confirmar` | Agora aciona o MP internamente |
 
 ---
 
-### 🛠️ **Implementation Plan**
+#### **2. Arquivos Criados**
 
-**Commit 1**: Instalar SDK e criar `MercadoPagoService` + `MercadoPagoModule`.
+| Arquivo | Descrição |
+|---|---|
+| `src/mercado-pago/mercado-pago.module.ts` | Módulo NestJS — provê e exporta `MercadoPagoService` |
+| `src/mercado-pago/mercado-pago.service.ts` | Serviço com 3 métodos: `criarPagamentoPix()`, `validateWebhookSignature()`, `consultarPagamento()` |
+| `prisma/migrations/20260226180152_add_mercado_pago_fields/` | Migration: 4 campos MP no modelo `Pagamento` |
 
-**Commit 2**: Implementar `criarPagamentoPix()` — gera a cobrança Pix via MP.
+#### **3. Arquivos Modificados**
 
-**Commit 3**: Criar webhook controller `POST /pagamentos/webhook` com validação de assinatura.
+| Arquivo | O que mudou |
+|---|---|
+| `prisma/schema.prisma` | Adicionados: `mpPaymentId`, `mpQrCode`, `mpQrCodeBase64`, `mpTicketUrl` (todos opcionais) |
+| `pagamentos.service.ts` | `confirmarPagamento()` agora aciona `criarPagamentoPix()`. Adicionado `processarWebhookMP()` |
+| `pagamentos.controller.ts` | Novo endpoint público `POST /pagamentos/webhook` |
+| `pagamentos.module.ts` | Importa `MercadoPagoModule` para injeção de dependência |
+| `pagamentos.service.spec.ts` | Mock do `MercadoPagoService` adicionado — 39/39 testes passando |
 
-**Commit 4**: Integrar `MercadoPagoService` no `PagamentosService.confirmarPagamento()`.
+#### **4. Decisões de Design**
 
-**Commit 5**: Adicionar campo `mpPaymentId` no schema Prisma + migration.
+- **Resiliência**: falha na API do MP **não bloqueia** a confirmação de pagamento — é logada e o fluxo continua (`try/catch`)
+- **Idempotência**: `pagamentoId` usado como `idempotencyKey` — evita cobranças duplicadas em caso de retry
+- **Segurança do webhook**: valida `x-signature` via HMAC-SHA256 (desativado automaticamente em sandbox)
+- **Sandbox ready**: token de placeholder `TEST-0000...` como fallback — build funciona sem `.env` configurado
 
----
+#### **5. Fluxo implementado**
 
-### ✅ **Acceptance Criteria**
+```
+Admin: PATCH /pagamentos/:id/confirmar-pagamento
+         ↓
+PagamentosService.confirmarPagamento()
+         ↓ (se metodoPagamento === PIX)
+MercadoPagoService.criarPagamentoPix() → API Mercado Pago
+         ↓
+Banco: mpPaymentId + mpQrCode + mpTicketUrl salvos
+         ↓
+Status: PROCESSADO → PAID
+         ↓ (mais tarde, assíncrono)
+MP: POST /pagamentos/webhook
+         ↓
+Backend valida assinatura → consultarPagamento() → atualiza PAID
+```
 
-- [ ] SDK `mercadopago` instalado e configurado via `.env`.
-- [ ] `MercadoPagoService` com método `criarPagamentoPix()`.
-- [ ] Webhook `POST /pagamentos/webhook` recebe e valida notificações MP.
-- [ ] Campo `mpPaymentId` salvo no banco após criação da cobrança.
-- [ ] Falha na API do MP não quebra o fluxo (try/catch + log).
-- [ ] CI continua verde após as mudanças.
+#### **6. Resultado dos Testes**
 
----
-
-### 📦 **Files to Create**
-
-- `backend/src/mercado-pago/mercado-pago.module.ts`
-- `backend/src/mercado-pago/mercado-pago.service.ts`
-
-### 📦 **Files to Modify**
-
-- `backend/prisma/schema.prisma` — adicionar `mpPaymentId` no modelo `Pagamento`
-- `backend/src/pagamentos/pagamentos.service.ts` — integrar MP no confirmar
-- `backend/src/pagamentos/pagamentos.controller.ts` — adicionar rota webhook
-- `backend/src/app.module.ts` — importar `MercadoPagoModule`
+```
+Test Suites: 5 passed, 5 total
+Tests:       39 passed, 39 total  (MercadoPagoService mockado)
+Time:        0.538 s
+```
 
 ---
 
@@ -1056,8 +1061,8 @@ Backend valida assinatura → atualiza status para PAID
 
 ---
 
-**Last Updated:** February 25, 2026
-**Version:** 2.4.0
+**Last Updated:** February 26, 2026
+**Version:** 2.5.0
 **Current Sprint:** Week 6
 
 
