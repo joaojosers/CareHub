@@ -9,6 +9,8 @@ import {
   Query,
   UseGuards,
   Request,
+  Headers,
+  HttpCode,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -165,6 +167,31 @@ export class PagamentosController {
   @ApiResponse({ status: 404, description: 'Pagamento não encontrado' })
   async delete(@Param('id') id: string) {
     return this.pagamentosService.delete(id);
+  }
+
+  // ─── MERCADO PAGO WEBHOOK ──────────────────────────────────────────────────
+
+  @Post('webhook')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Webhook Mercado Pago (público)',
+    description:
+      'Recebe notificações automáticas do Mercado Pago quando um pagamento Pix é confirmado. ' +
+      'Não requer autenticação JWT — a segurança é garantida pela validação de assinatura (x-signature).',
+  })
+  @ApiResponse({ status: 200, description: 'Notificação recebida e processada' })
+  async webhookMercadoPago(
+    @Headers('x-signature') xSignature: string,
+    @Headers('x-request-id') xRequestId: string,
+    @Query('data.id') dataId: string,
+    @Body() body: any,
+  ) {
+    return this.pagamentosService.processarWebhookMP(
+      xSignature || '',
+      xRequestId || '',
+      dataId || '',
+      body,
+    );
   }
 
   // ─── CUIDADOR ENDPOINTS ────────────────────────────────────────────────────
