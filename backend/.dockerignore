@@ -1,0 +1,35 @@
+# Dependencies — reinstalled inside container
+node_modules
+
+# TypeScript source — only dist/ is needed in production
+src
+
+# Test files — not needed in production image
+test
+**/*.spec.ts
+**/*.e2e-spec.ts
+
+# Build artifacts from local machine — rebuilt inside container
+dist
+
+# Environment files — injected at runtime via docker-compose or CI/CD
+.env
+.env.*
+
+# Git and IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (not needed inside the image itself)
+Dockerfile
+.dockerignore
