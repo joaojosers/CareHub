@@ -611,9 +611,9 @@ Monthly summary includes:
 
 | Status | Count |
 |--------|-------|
-| ✅ Implemented | 20 |
+| ✅ Implemented | 21 |
 | 📋 Pending | 0 |
-| **Total** | **20** |
+| **Total** | **21** |
 
 ---
 
@@ -1049,6 +1049,75 @@ Time:        0.538 s
 
 ---
 
+## Issue #22: Docker & Containerização
+
+**Status:** ✅ IMPLEMENTED
+
+**Category:** Infrastructure
+
+**Priority:** P1 - High
+
+**Sprint:** Week 6
+
+**Branch:** `feat/docker-containerization` (merged)
+
+---
+
+### 📋 **Business Context**
+
+Garantir que o backend NestJS rode de forma idêntica em qualquer ambiente — desenvolvimento, staging e produção — eliminando o problema "funciona na minha máquina". Com Docker, o deploy automatizado (Issue #23) se torna simples e reproduzível.
+
+---
+
+### 🎯 **Technical Implementation**
+
+#### **Arquivos Criados**
+
+| Arquivo | Descrição |
+|---|---|
+| `backend/Dockerfile` | Multi-stage: `builder` (compila TS) + `production` (imagem enxuta) |
+| `backend/.dockerignore` | Exclui `node_modules`, `dist`, `.env`, arquivos de teste da imagem |
+| `backend/.env.example` | Template de variáveis de ambiente para novos desenvolvedores |
+| `docker-compose.override.yml` | Override local para hot-reload (gitignored — não commitado) |
+
+#### **Arquivos Modificados**
+
+| Arquivo | O que mudou |
+|---|---|
+| `docker-compose.yml` | Adicionado serviço `backend` com healthcheck no PostgreSQL, `depends_on`, e variáveis de ambiente |
+| `.gitignore` | Adicionados: `frontend/.next/`, `frontend/node_modules/`, `docker-compose.override.yml` |
+
+#### **Decisões de Design**
+
+- **Multi-stage build**: imagem de produção não contém TypeScript, devDependencies ou source code — apenas o `dist/` compilado
+- **Non-root user**: container roda como usuário `carehub` (sem privilégios de root) — boas práticas de segurança
+- **Healthcheck**: PostgreSQL só aceita conexões após estar completamente pronto (`pg_isready`)
+- **Migrations automáticas**: `CMD` executa `prisma migrate deploy` antes de iniciar o servidor
+- **Override pattern**: `docker-compose.override.yml` para desenvolvimento local com hot-reload (carregado automaticamente pelo Docker, não commitado)
+
+#### **Como usar**
+
+```bash
+# Subir banco + backend juntos:
+docker-compose up
+
+# Só o banco (desenvolvimento local com npm run start:dev):
+docker-compose up db
+
+# Build da imagem de produção:
+docker build -t carehub-backend --target production ./backend
+```
+
+---
+
+### 🔗 **Related Issues**
+
+- Depends on: Issue #19 (CI/CD Pipeline) ✅
+- Depends on: Issue #21 (Mercado Pago) ✅
+- Enables: Issue #23 (Production Deployment)
+
+---
+
 ## Labels Reference
 
 - **Infrastructure:** Project setup, database, Docker
@@ -1062,7 +1131,7 @@ Time:        0.538 s
 ---
 
 **Last Updated:** February 26, 2026
-**Version:** 2.5.0
+**Version:** 2.6.0
 **Current Sprint:** Week 6
 
 
