@@ -1118,6 +1118,83 @@ docker build -t carehub-backend --target production ./backend
 
 ---
 
+## Issue #23: Production Deployment on OCI
+
+**Status:** ✅ IMPLEMENTED
+
+**Category:** DevOps / Infrastructure
+
+**Priority:** P0 - Critical
+
+**Sprint:** Week 7
+
+**Branch:** `docs/oci-deployment`
+
+---
+
+### 📋 **Business Context**
+
+With the CareHub API fully developed and containerized, it was necessary to deploy it to a production environment accessible over the public internet. Oracle Cloud Infrastructure (OCI) was chosen for hosting.
+
+**Goal**: Deploy the PostgreSQL Database and NestJS Backend to a public OCI instance securely and reliably.
+
+**Business Impact**:
+- ✅ **Public Access:** The API is now live at `http://136.248.110.133:3000`.
+- ✅ **Stability:** Dockerized services guarantee the environment runs flawlessly.
+- ✅ **Data Persistence:** Database volumes configured to retain care data across restarts.
+
+---
+
+### 🎯 **Technical Implementation**
+
+#### **1. Environment Provisioning & Tools**
+- Connected to OCI compute instance via SSH.
+- Installed `podman` and `podman-compose` to emulate Docker CLI native functionality on Oracle Linux 9.
+
+#### **2. Backend Configuration Adjustments**
+During deployment, critical compatibility updates were discovered and applied to the codebase:
+- **`docker-compose.yml`**: Simplified service mappings and explicit injected environment variables instead of relying on broken `.env` local paths in production.
+- **Prisma 7 Compatibility**: Prisma requires `prisma.config.ts` for database URL resolutions during migrate operations. Updated the production target in `Dockerfile` to copy this file to ensure `npx prisma migrate deploy` functions without `$DATABASE_URL` runtime errors.
+
+#### **3. Network & Security (Firewall)**
+- **Linux Level**: Opened TCP Port 3000 using `sudo firewall-cmd --permanent --add-port=3000/tcp` e `sudo firewall-cmd --reload`.
+- **OCI Level**: Created an Ingress Rule in the VCN Default Security List to accept `0.0.0.0/0` on TCP Port 3000.
+
+#### **4. Execution Flow**
+```bash
+# Build the images forcing clean cache to capture new configurations
+docker compose build --no-cache backend
+
+# Boot the isolated containers
+docker compose up -d
+
+# Check the NestJS backend status
+docker compose logs -f backend
+```
+
+---
+
+### ✅ **Acceptance Criteria**
+
+- [x] OCI server configured with Podman/Docker Compose.
+- [x] Dockerfile explicitly adds `prisma.config.ts` for Prisma 7 migrations.
+- [x] `docker-compose.yml` refactored for cloud injection.
+- [x] PostgreSQL database runs successfully with persistent volumes.
+- [x] Migrations generate table structures automatically on runtime start.
+- [x] NestJS application boots without errors up to `[NestApplication] Nest application successfully started`.
+- [x] Cloud firewall (VCN Ingress) and OS firewall configuration allow HTTP access.
+- [x] API is publicly pingable and responds at IP `136.248.110.133:3000`.
+
+---
+
+### 🔗 **Related Issues**
+
+- Depends on: Issue #22 (Docker & Containerization) ✅ 
+- Enables: HTTPS / SSL Setup
+- Enables: Frontend Cloud Deployment
+
+---
+
 ## Labels Reference
 
 - **Infrastructure:** Project setup, database, Docker
@@ -1130,8 +1207,8 @@ docker build -t carehub-backend --target production ./backend
 
 ---
 
-**Last Updated:** February 26, 2026
-**Version:** 2.6.0
-**Current Sprint:** Week 6
+**Last Updated:** March 01, 2026
+**Version:** 2.7.0
+**Current Sprint:** Week 7
 
 
