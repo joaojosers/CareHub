@@ -1,45 +1,33 @@
+version: '3.8'
+
 services:
-  # ─── PostgreSQL Database ──────────────────────────────────────────────────────
   db:
-    image: postgres:17.5
+    image: postgres:17-alpine
     container_name: carehub-db
     restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: careuser
       POSTGRES_PASSWORD: carepassword
       POSTGRES_DB: carehub_db
     ports:
       - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U careuser -d carehub_db" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  # ─── NestJS Backend ───────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: production
     container_name: carehub-backend
-    restart: unless-stopped
+    restart: always
     ports:
       - "3000:3000"
+    depends_on:
+      - db
     environment:
       DATABASE_URL: postgresql://careuser:carepassword@db:5432/carehub_db?schema=public
-      JWT_SECRET: ${JWT_SECRET:-carehub_super_secret_key_2026}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
-      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-TEST-0000000000000000-000000-00000000000000000000000000000000-000000000}
-      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      # Mount .env for local development overrides (optional)
-      - ./backend/.env:/app/.env:ro
+      JWT_SECRET: carehub_super_secret_key_2026
+      NODE_ENV: production
 
 volumes:
   postgres_data:

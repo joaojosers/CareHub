@@ -1,44 +1,34 @@
-# ─── Stage 1: Builder ─────────────────────────────────────────────────────────
-# Installs all dependencies and compiles TypeScript → JavaScript
+# ─── Estágio 1: Builder ───────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
-
 WORKDIR /app
-
-# Copy dependency manifests first (leverages Docker layer cache)
 COPY package*.json ./
 RUN npm ci
-
-# Copy Prisma schema and generate the client
 COPY prisma ./prisma/
 RUN npx prisma generate
-
-# Copy source code and compile
 COPY . .
 RUN npm run build
 
-# ─── Stage 2: Production ──────────────────────────────────────────────────────
-# Lean image with only production dependencies and compiled output
+# ─── Estágio 2: Production ────────────────────────────────────────────────────
 FROM node:22-alpine AS production
-
 WORKDIR /app
-
-# Install only production dependencies
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Copy Prisma schema and regenerate client for production environment
-COPY prisma ./prisma/
-RUN npx prisma generate
-
-# Copy compiled JavaScript from builder stage
+# Copiamos o binário compilado e as dependências
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY prisma ./prisma/
 
-# Non-root user for security
+# AQUI ESTÁ A CORREÇÃO DE OURO: Adicionamos a configuração do Prisma 7
+COPY prisma.config.ts ./
+
 RUN addgroup -S carehub && adduser -S carehub -G carehub
-USER carehub
 
-# Expose NestJS default port
+ENV NODE_ENV=production
+ENV DATABASE_URL=postgresql://careuser:carepassword@db:5432/carehub_db?schema=public
+
+USER carehub
 EXPOSE 3000
 
-# Run migrations then start the server
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
