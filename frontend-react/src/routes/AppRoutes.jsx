@@ -19,6 +19,8 @@ import DetalhePaciente from "../pages/admin/DetalhePaciente";
 import RelatoriosAdmin from "../pages/admin/Relatorios";
 import DetalheCuidador from "../pages/admin/DetalheCuidador";
 import AdminHoras from "../pages/admin/AdminHoras";
+import EditarPaciente from "../pages/admin/EditarPaciente";
+import Pagamentos from "../pages/admin/Pagamentos";
 
 /* ========================= */
 /* CUIDADOR */
@@ -26,13 +28,14 @@ import AdminHoras from "../pages/admin/AdminHoras";
 import DashboardCuidador from "../pages/cuidador/DashboardCuidador";
 import MeusPacientes from "../pages/cuidador/MeusPacientes";
 import LancarHoras from "../pages/cuidador/LancarHoras";
+import PacienteProntuario from "../pages/cuidador/PacienteProntuario";
 
 /* ========================= */
 /* FAMILIAR */
 /* ========================= */
 import DashboardFamiliar from "../pages/familiar/DashboardFamiliar";
 import Paciente from "../pages/familiar/Pacientes";
-import RelatoriosFamiliar from "../pages/familiar/Relatorios";
+import Relatorios from "../pages/familiar/Relatorios";
 
 /* ========================= */
 /* NOT FOUND */
@@ -63,6 +66,8 @@ function AppRoutes() {
           <Route path="/admin/pacientes/:id" element={<DetalhePaciente />} />
           <Route path="/admin/relatorios" element={<RelatoriosAdmin />} />
           <Route path="/admin/horas" element={<AdminHoras />} />
+          <Route path="/admin/pacientes/editar/:id" element={<EditarPaciente />} />
+          <Route path="/admin/pagamentos" element={<Pagamentos />} />
         </Route>
       </Route>
 
@@ -74,6 +79,7 @@ function AppRoutes() {
           <Route path="/cuidador/dashboard" element={<DashboardCuidador />} />
           <Route path="/cuidador/pacientes" element={<MeusPacientes />} />
           <Route path="/cuidador/horas" element={<LancarHoras />} />
+          <Route path="/cuidador/paciente/:id/prontuario" element={<PacienteProntuario />} />
         </Route>
       </Route>
 
@@ -84,7 +90,7 @@ function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/familiar/dashboard" element={<DashboardFamiliar />} />
           <Route path="/familiar/paciente" element={<Paciente />} />
-          <Route path="/familiar/relatorios" element={<RelatoriosFamiliar />} />
+          <Route path="/familiar/relatorios/:id?" element={<Relatorios/>} />
         </Route>
       </Route>
 

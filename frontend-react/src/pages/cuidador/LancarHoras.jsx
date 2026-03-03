@@ -1,98 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import api from "../../services/api";
+import { AuthContext } from "../../contexts/AuthContext";
+import { toast } from "react-hot-toast";
+import "../../styles/ui.css";
 
 export default function LancarHoras() {
+  const { usuario } = useContext(AuthContext);
   const [pacientes, setPacientes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
   const [form, setForm] = useState({
-    patientId: "",
-    date: "",
-    startTime: "",
-    endTime: "",
+    pacienteId: "",
+    data: new Date().toISOString().split('T')[0], // Apenas para o input de data
+    horaInicio: "",
+    horaFim: "",
     descricao: "",
     medicacoes: "",
-    pressao: "",
+    pressaoArterial: "",
     observacoes: ""
   });
 
   useEffect(() => {
-    carregarPacientes();
-  }, []);
+    if (usuario?.id) {
+      carregarPacientes();
+    }
+  }, [usuario]);
 
   const carregarPacientes = async () => {
     try {
-      const usuarioLogado = JSON.parse(localStorage.getItem("user"));
-
-      const vinculosResponse = await api.get("/assignments", {
-        params: { caregiverId: usuarioLogado.id, status: "ATIVO" }
-      });
-
-      const vinculos = vinculosResponse.data;
-
-      const pacientesPromises = vinculos.map((v) =>
-        api.get(`/patients/${v.patientId}`)
-      );
-
-      const pacientesResponses = await Promise.all(pacientesPromises);
-
-      const listaPacientes = pacientesResponses.map((r) => r.data);
-
-      setPacientes(listaPacientes);
+      // Usando o endpoint que já confirmamos que funciona para o cuidador
+      const response = await api.get(`/cuidadores/${usuario.id}/pacientes`);
+      setPacientes(response.data);
     } catch (error) {
-      console.error("Erro ao carregar pacientes");
-    }
-  };
-
-  const calcularHoras = () => {
-    const inicio = new Date(`1970-01-01T${form.startTime}:00`);
-    const fim = new Date(`1970-01-01T${form.endTime}:00`);
-    const diff = (fim - inicio) / 1000 / 60 / 60;
-    return diff > 0 ? diff : 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const usuarioLogado = JSON.parse(localStorage.getItem("user"));
-    const total = calcularHoras();
-
-    if (total <= 0) {
-      alert("Horário inválido");
-      return;
-    }
-
-    try {
-      await api.post("/hours", {
-        caregiverId: usuarioLogado.id,
-        patientId: form.patientId,
-        date: form.date,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        totalHours: total,
-        report: {
-          descricao: form.descricao,
-          medicacoes: form.medicacoes,
-          pressao: form.pressao,
-          observacoes: form.observacoes
-        },
-        status: "PENDENTE",
-        createdAt: new Date().toISOString()
-      });
-
-      alert("Horas lançadas com sucesso!");
-
-      setForm({
-        patientId: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-        descricao: "",
-        medicacoes: "",
-        pressao: "",
-        observacoes: ""
-      });
-
-    } catch (error) {
-      console.error("Erro ao lançar horas");
+      toast.error("Erro ao carregar pacientes vinculados.");
     }
   };
 
@@ -100,101 +40,140 @@ export default function LancarHoras() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+
+      // 1. Montagem das datas no formato ISO exigido pelo Swagger (YYYY-MM-DDTHH:mm:ssZ)
+      const dataInicioISO = new Date(`${form.data}T${form.horaInicio}:00`).toISOString();
+      const dataFimISO = new Date(`${form.data}T${form.horaFim}:00`).toISOString();
+
+      // 2. Montagem do objeto conforme o POST /plantoes
+      const payload = {
+        pacienteId: form.pacienteId,
+        cuidadorId: usuario.id,
+        dataInicio: dataInicioISO,
+        dataFim: dataFimISO,
+        relatorio: {
+          descricao: form.descricao,
+          medicacoes: form.medicacoes || null,
+          pressaoArterial: form.pressaoArterial || null,
+          observacoes: form.observacoes || null
+        }
+      };
+
+      await api.post("/plantoes", payload);
+
+      toast.success("Plantão lançado com sucesso!");
+      
+      // Limpa campos de relatório e horários após o envio
+      setForm({
+        ...form,
+        horaInicio: "",
+        horaFim: "",
+        descricao: "",
+        medicacoes: "",
+        pressaoArterial: "",
+        observacoes: ""
+      });
+
+    } catch (error) {
+      console.error("Erro no post:", error);
+      toast.error(error.response?.data?.message || "Erro ao salvar plantão.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="page-wrapper">
-      <div className="page-title">
-        <h1>Lançar Horas</h1>
-      </div>
+    <div className="admin-container">
+      <header className="admin-header">
+        <div>
+          <h1>Registrar Plantão</h1>
+          <p className="subtitle">Preencha os dados do atendimento realizado</p>
+        </div>
+      </header>
 
       <div className="detail-card">
-        <form onSubmit={handleSubmit} className="form-vertical">
-
+        <form onSubmit={handleSubmit}>
           <div className="detail-section">
-            <h3>Informações do Atendimento</h3>
+            <h3>Informações Gerais</h3>
+            <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              
+              <div className="detail-item">
+                <label className="detail-label">Paciente</label>
+                <select name="pacienteId" value={form.pacienteId} onChange={handleChange} required className="ui-input">
+                  <option value="">Selecione...</option>
+                  {pacientes.map(p => (
+                    <option key={p.id} value={p.id}>{p.nome}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="detail-grid">
-              <select
-                name="patientId"
-                value={form.patientId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Selecione o paciente</option>
-                {pacientes.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              <div className="detail-item">
+                <label className="detail-label">Data do Plantão</label>
+                <input type="date" name="data" value={form.data} onChange={handleChange} required className="ui-input" />
+              </div>
 
-              <input
-                type="date"
-                name="date"
-                value={form.date}
-                onChange={handleChange}
-                required
-              />
+              <div className="detail-item">
+                <label className="detail-label">Hora Início</label>
+                <input type="time" name="horaInicio" value={form.horaInicio} onChange={handleChange} required className="ui-input" />
+              </div>
 
-              <input
-                type="time"
-                name="startTime"
-                value={form.startTime}
-                onChange={handleChange}
-                required
-              />
-
-              <input
-                type="time"
-                name="endTime"
-                value={form.endTime}
-                onChange={handleChange}
-                required
-              />
+              <div className="detail-item">
+                <label className="detail-label">Hora Fim</label>
+                <input type="time" name="horaFim" value={form.horaFim} onChange={handleChange} required className="ui-input" />
+              </div>
             </div>
           </div>
 
-          <div className="detail-section">
+          <div className="detail-section" style={{ marginTop: '30px' }}>
             <h3>Relatório do Atendimento</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              
+              <div className="detail-item">
+                <label className="detail-label">Descrição das Atividades</label>
+                <textarea 
+                  name="descricao" 
+                  value={form.descricao} 
+                  onChange={handleChange} 
+                  placeholder="Relate como foi o período..."
+                  required
+                  style={{ minHeight: '100px', width: '100%' }}
+                />
+              </div>
 
-            <div className="detail-grid">
-              <textarea
-                name="descricao"
-                placeholder="Descrição das atividades realizadas"
-                value={form.descricao}
-                onChange={handleChange}
-                required
-              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div className="detail-item">
+                  <label className="detail-label">Medicações</label>
+                  <input type="text" name="medicacoes" value={form.medicacoes} onChange={handleChange} placeholder="Ex: Losartana 50mg" />
+                </div>
+                <div className="detail-item">
+                  <label className="detail-label">Pressão Arterial</label>
+                  <input type="text" name="pressaoArterial" value={form.pressaoArterial} onChange={handleChange} placeholder="Ex: 12/8" />
+                </div>
+              </div>
 
-              <textarea
-                name="medicacoes"
-                placeholder="Medicações administradas"
-                value={form.medicacoes}
-                onChange={handleChange}
-              />
-
-              <input
-                type="text"
-                name="pressao"
-                placeholder="Pressão arterial (ex: 12x8)"
-                value={form.pressao}
-                onChange={handleChange}
-              />
-
-              <textarea
-                name="observacoes"
-                placeholder="Observações adicionais"
-                value={form.observacoes}
-                onChange={handleChange}
-              />
+              <div className="detail-item">
+                <label className="detail-label">Observações Adicionais</label>
+                <textarea 
+                  name="observacoes" 
+                  value={form.observacoes} 
+                  onChange={handleChange} 
+                  placeholder="Algo fora do comum?"
+                  style={{ minHeight: '60px', width: '100%' }}
+                />
+              </div>
             </div>
           </div>
 
-          <div style={{ marginTop: 20 }}>
-            <button type="submit" className="btn-primary">
-              Salvar Lançamento
+          <div style={{ marginTop: '30px' }}>
+            <button type="submit" className="btn-logout" disabled={loading}>
+              {loading ? "Enviando..." : "Confirmar"}
             </button>
           </div>
-
         </form>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
+import { toast } from "react-hot-toast"; // Recomendado para avisos mais elegantes
 import "../../styles/login.css";
 import Logo from "../../components/Logo";
 
@@ -27,15 +28,44 @@ export default function Login() {
 
       const user = await login(email, senha);
 
-      if (user.role === "ADMIN") {
-        navigate("/admin/dashboard");
-      } else if (user.role === "CUIDADOR") {
-        navigate("/cuidador/dashboard");
-      } else if (user.role === "FAMILIAR") {
-        navigate("/familiar/dashboard");
+      if (!user) {
+        setErro("Erro ao autenticar usuário");
+        return;
       }
+
+      // 1. Verificar se o usuário está ativo/aprovado
+      // Bloqueia cuidadores PENDENTES ou qualquer usuário SUSPENSO
+      if (user.status === "PENDENTE") {
+        setErro("Seu cadastro está em análise. Você receberá um aviso quando for aprovado.");
+        return;
+      }
+
+      if (user.status === "SUSPENSO") {
+        setErro("Seu acesso está temporariamente suspenso. Contate o administrador.");
+        return;
+      }
+
+      const tipo = user.tipo?.toUpperCase();
+
+      // 2. Lógica de Redirecionamento baseada no Tipo (Role)
+      switch (tipo) {
+        case "ADMIN":
+          navigate("/admin/dashboard");
+          break;
+        case "CUIDADOR":
+          navigate("/cuidador/dashboard");
+          break;
+        case "FAMILIAR":
+          navigate("/familiar/dashboard");
+          break;
+        default:
+          setErro("Tipo de usuário não reconhecido no sistema");
+      }
+
     } catch (error) {
-      setErro(error.message || "Erro ao realizar login");
+      // Captura erros de credenciais ou erros do servidor
+      const msg = error.response?.data?.message || "E-mail ou senha incorretos";
+      setErro(msg);
     } finally {
       setLoading(false);
     }
@@ -46,9 +76,7 @@ export default function Login() {
       <div className="login-card">
         <Logo />
 
-        <p className="subtitle">
-          Sistema de Gestão de Cuidadores
-        </p>
+        <p className="subtitle">Sistema de Gestão de Cuidadores</p>
 
         {erro && <div className="error-box">{erro}</div>}
 
@@ -59,6 +87,7 @@ export default function Login() {
             placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <label>Senha</label>
@@ -67,16 +96,16 @@ export default function Login() {
             placeholder="••••••••"
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
+            required
           />
 
           <button type="submit" disabled={loading}>
-            {loading ? "Entrando..." : "Entrar →"}
+            {loading ? "Autenticando..." : "Entrar →"}
           </button>
         </form>
 
         <div className="register-link">
-          Primeiro acesso?{" "}
-          <Link to="/cadastro">Cadastre-se</Link>
+          Primeiro acesso? <Link to="/cadastro">Cadastre-se</Link>
         </div>
 
         <div className="forgot-password">

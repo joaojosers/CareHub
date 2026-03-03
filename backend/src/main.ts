@@ -5,6 +5,12 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Habilita CORS
+  app.enableCors({
+  origin: "http://localhost:5173",
+  credentials: true,
+});
+
   // Configuração do Swagger
   const config = new DocumentBuilder()
     .setTitle('CareHub API')

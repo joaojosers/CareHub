@@ -3,16 +3,15 @@ import { Navigate, Outlet } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
 
 export default function ProtectedRoute({ perfilPermitido }) {
-  const { user } = useContext(AuthContext);
+  const { usuario } = useContext(AuthContext);
 
-  if (!user) {
+  if (!usuario) {
     return <Navigate to="/login" replace />;
   }
 
-  if (perfilPermitido && user.role !== perfilPermitido) {
+  if (perfilPermitido && usuario.tipo !== perfilPermitido) {
     return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
 }
-

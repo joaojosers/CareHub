@@ -1,13 +1,13 @@
 import { NavLink } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
-import Logo from "../Logo"; 
+import Logo from "../Logo";
 
 export default function Sidebar() {
-  const { user } = useContext(AuthContext);
+  const { usuario } = useContext(AuthContext);
 
   function renderMenu() {
-    switch (user?.role) {
+    switch (usuario?.tipo) {
       case "ADMIN":
         return (
           <>
@@ -15,6 +15,7 @@ export default function Sidebar() {
             <NavLink to="/admin/pacientes">Pacientes</NavLink>
             <NavLink to="/admin/cuidadores">Cuidadores</NavLink>
             <NavLink to="/admin/relatorios">Relatórios</NavLink>
+            <NavLink to="/admin/pagamentos">Pagamentos</NavLink>
           </>
         );
 
@@ -23,7 +24,7 @@ export default function Sidebar() {
           <>
             <NavLink to="/cuidador/dashboard">Dashboard</NavLink>
             <NavLink to="/cuidador/pacientes">Meus Pacientes</NavLink>
-            <NavLink to="/cuidador/horas">Lancar Horas</NavLink>
+            <NavLink to="/cuidador/horas">Registrar Plantão</NavLink>
           </>
         );
 
@@ -31,8 +32,8 @@ export default function Sidebar() {
         return (
           <>
             <NavLink to="/familiar/dashboard">Dashboard</NavLink>
-            <NavLink to="/familiar/paciente">Paciente</NavLink>
-            <NavLink to="/familiar/relatorios">Relatorios</NavLink>
+            <NavLink to="/familiar/paciente">Dependente</NavLink>
+            
           </>
         );
 
@@ -43,9 +44,8 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      {/* 🔹 Logo reutilizado */}
       <Logo />
-      
+
       <nav className="sidebar-menu">
         {renderMenu()}
       </nav>

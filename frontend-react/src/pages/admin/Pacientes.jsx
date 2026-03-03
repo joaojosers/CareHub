@@ -2,22 +2,29 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
+import PageTitle from "../../components/ui/PageTitle";
+import DetailCard from "../../components/ui/DetailCard";
+
 export default function Pacientes() {
   const navigate = useNavigate();
-
   const [pacientes, setPacientes] = useState([]);
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [filtroNome, setFiltroNome] = useState(""); // Estado para a busca
 
   const initialForm = {
-    patientName: "",
-    birthDate: "",
-    notes: "",
-    street: "",
-    number: "",
-    city: "",
-    state: "",
-    zip: "",
+    nome: "",
+    dataNascimento: "",
+    necessidades: "",
+    logradouro: "",
+    numero: "",
+    complemento: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
+    cep: "",
+    referencia: "",
     familiarName: "",
+    familiarCpf: "",
     familiarEmail: "",
     familiarPhone: "",
     familiarPassword: ""
@@ -31,12 +38,19 @@ export default function Pacientes() {
 
   const carregarPacientes = async () => {
     try {
-      const response = await api.get("/patients");
+      const response = await api.get("/pacientes");
       setPacientes(response.data);
     } catch (error) {
       console.error("Erro ao carregar pacientes");
     }
   };
+
+  // --- Lógica de Filtragem e Ordenação ---
+  const pacientesFiltradosEOrdenados = pacientes
+    .filter((p) => 
+      p.nome.toLowerCase().includes(filtroNome.toLowerCase())
+    )
+    .sort((a, b) => a.nome.localeCompare(b.nome)); // Ordem Alfabética (A-Z)
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -44,134 +58,136 @@ export default function Pacientes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const now = new Date().toISOString();
-
-      const patientResponse = await api.post("/patients", {
-        name: form.patientName,
-        birthDate: form.birthDate,
-        notes: form.notes,
-        address: {
-          street: form.street,
-          number: form.number,
-          city: form.city,
-          state: form.state,
-          zip: form.zip
-        },
-        createdAt: now
+      const pacienteResponse = await api.post("/pacientes", {
+        nome: form.nome,
+        dataNascimento: new Date(form.dataNascimento).toISOString(),
+        necessidades: form.necessidades,
+        endereco: {
+          logradouro: form.logradouro,
+          numero: form.numero,
+          bairro: form.bairro,
+          cidade: form.cidade,
+          estado: form.estado,
+          cep: form.cep.replace(/\D/g, ""),
+          complemento: form.complemento || undefined,
+          referencia: form.referencia || undefined
+        }
       });
 
-      const patientId = patientResponse.data.id;
+      const pacienteId = pacienteResponse.data.id;
 
-      await api.post("/users", {
-        name: form.familiarName,
+      await api.post("/auth/register", {
+        nome: form.familiarName,
         email: form.familiarEmail,
-        phone: form.familiarPhone,
-        password: form.familiarPassword,
-        role: "FAMILIAR",
-        patientId: patientId,
-        status: "APROVADO",
-        createdAt: now
+        senha: form.familiarPassword,
+        telefone: form.familiarPhone,
+        cpf: form.familiarCpf.replace(/\D/g, ""),
+        tipo: "FAMILIAR",
+        status: "APROVADO"
       });
 
+      alert("Cadastro completo realizado com sucesso!");
       setMostrarForm(false);
       setForm(initialForm);
       carregarPacientes();
-
     } catch (error) {
-      console.error("Erro ao salvar paciente");
+      alert("Erro ao salvar cadastro.");
     }
   };
 
   return (
     <>
-      {/* HEADER */}
       <div className="page-title">
         <h1>Pacientes</h1>
-        <button
-          className="btn-primary"
+        <button 
+          className={mostrarForm ? "btn-secondary" : "btn-primary"} 
           onClick={() => setMostrarForm(!mostrarForm)}
         >
-          {mostrarForm ? "Cancelar" : "Novo Paciente"}
+          {mostrarForm ? "Voltar para Lista" : "Novo Paciente"}
         </button>
       </div>
 
-      {/* FORMULÁRIO */}
-      {mostrarForm && (
-        <div className="detail-card" style={{ marginBottom: 30 }}>
-          <form onSubmit={handleSubmit} className="form-vertical">
-
-            <div className="detail-section">
+      {mostrarForm ? (
+        <DetailCard>
+          <form onSubmit={handleSubmit} className="form-layout">
+            <div className="form-section">
               <h3>Dados do Paciente</h3>
-              <div className="detail-grid">
-                <input name="patientName" placeholder="Nome" onChange={handleChange} required />
-                <input type="date" name="birthDate" onChange={handleChange} required />
-                <input name="notes" placeholder="Observações" onChange={handleChange} />
+              <div className="form-grid">
+                <input name="nome" placeholder="Nome Completo" value={form.nome} onChange={handleChange} required />
+                <input type="date" name="dataNascimento" value={form.dataNascimento} onChange={handleChange} required />
+                <input name="necessidades" placeholder="Necessidades Específicas" value={form.necessidades} onChange={handleChange} />
               </div>
             </div>
 
-            <div className="detail-section">
-              <h3>Endereço</h3>
-              <div className="detail-grid">
-                <input name="street" placeholder="Rua" onChange={handleChange} />
-                <input name="number" placeholder="Número" onChange={handleChange} />
-                <input name="city" placeholder="Cidade" onChange={handleChange} />
-                <input name="state" placeholder="Estado" onChange={handleChange} />
-                <input name="zip" placeholder="CEP" onChange={handleChange} />
+            <div className="form-section">
+              <h3>Endereço de Atendimento</h3>
+              <div className="form-grid">
+                <input name="cep" placeholder="CEP" value={form.cep} onChange={handleChange} maxLength={9} required />
+                <input name="logradouro" placeholder="Logradouro" value={form.logradouro} onChange={handleChange} required />
+                <input name="numero" placeholder="Número" value={form.numero} onChange={handleChange} required />
+                <input name="bairro" placeholder="Bairro" value={form.bairro} onChange={handleChange} required />
+                <input name="cidade" placeholder="Cidade" value={form.cidade} onChange={handleChange} required />
+                <input name="estado" placeholder="UF" value={form.estado} onChange={handleChange} maxLength={2} required />
               </div>
             </div>
 
-            <div className="detail-section">
-              <h3>Responsável</h3>
-              <div className="detail-grid">
-                <input name="familiarName" placeholder="Nome" onChange={handleChange} required />
-                <input name="familiarEmail" placeholder="Email" onChange={handleChange} required />
+            <div className="form-section">
+              <h3>Responsável Familiar</h3>
+              <div className="form-grid">
+                <input name="familiarName" placeholder="Nome do Responsável" onChange={handleChange} required />
+                <input name="familiarCpf" placeholder="CPF" onChange={handleChange} required />
+                <input name="familiarEmail" type="email" placeholder="E-mail" onChange={handleChange} required />
                 <input name="familiarPhone" placeholder="Telefone" onChange={handleChange} />
-                <input type="password" name="familiarPassword" placeholder="Senha" onChange={handleChange} required />
+                <input name="familiarPassword" type="password" placeholder="Senha" onChange={handleChange} required />
               </div>
             </div>
 
-            <div style={{ marginTop: 20 }}>
-              <button type="submit" className="btn-primary">
-                Salvar Paciente
+            <div className="form-actions">
+              <button type="submit" className="btn-primary" style={{ padding: '12px 24px' }}>
+                Finalizar Cadastro
               </button>
             </div>
-
           </form>
-        </div>
-      )}
-
-      {/* LISTA */} 
-      <div className="patients-list">
-        {pacientes.length === 0 ? (
-          <div className="empty-state">
-            Nenhum paciente cadastrado
+        </DetailCard>
+      ) : (
+        <>
+          {/* BARRA DE PESQUISA - Usando estilo do seu ui.css */}
+          <div className="filters-row" style={{ marginBottom: '20px' }}>
+            <input 
+              type="text" 
+              placeholder="🔍 Pesquisar paciente por nome..." 
+              value={filtroNome}
+              onChange={(e) => setFiltroNome(e.target.value)}
+              style={{ width: '100%', maxWidth: '400px' }}
+            />
           </div>
-        ) : (
-          pacientes.map((p) => (
-            <div key={p.id} className="patient-card">
-              <div className="patient-info">
-                <strong
-                  style={{ cursor: "pointer" }}
-                  onClick={() => navigate(`/admin/pacientes/${p.id}`)}
-                >
-                  {p.name}
-                </strong>
-              </div>
 
-              <div className="patient-actions">
-                <button
-                  className="btn-secondary"
-                  onClick={() => navigate(`/admin/pacientes/${p.id}`)}
-                >
-                  Ver Detalhes
-                </button>
+          <div className="patients-list">
+            {pacientesFiltradosEOrdenados.length === 0 ? (
+              <div className="empty-state">
+                {filtroNome ? "Nenhum paciente encontrado com este nome." : "Nenhum paciente cadastrado."}
               </div>
-            </div>
-          ))
-        )}
-      </div>    
+            ) : (
+              pacientesFiltradosEOrdenados.map((p) => (
+                <div key={p.id} className="patient-card">
+                  <div className="patient-info">
+                    <strong>{p.nome}</strong>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      {p.endereco?.cidade || "Cidade n/i"} - {p.endereco?.estado || "UF"}
+                    </span>
+                  </div>
+                  <div className="patient-actions">
+                    <button className="btn-secondary" onClick={() => navigate(`/admin/pacientes/${p.id}`)}>
+                      Ver Detalhes
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
     </>
   );
 }
