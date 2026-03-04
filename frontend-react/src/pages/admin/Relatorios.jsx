@@ -21,13 +21,11 @@ export default function Relatorios() {
   const [cuidadores, setCuidadores] = useState([]);
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [pacienteFiltro, setPacienteFiltro] = useState("");
   const [cuidadorFiltro, setCuidadorFiltro] = useState("");
   const [statusFiltro, setStatusFiltro] = useState("PENDENTE");
   const [mes, setMes] = useState("");
   const [ano, setAno] = useState(new Date().getFullYear().toString());
-
   const { usuario } = useContext(AuthContext);
   const isAdmin = usuario?.tipo === "ADMIN";
 
@@ -53,29 +51,21 @@ export default function Relatorios() {
     }
   };
 
-  const atualizarStatus = async (id, novoStatus) => {
-    const mensagem = novoStatus === 'APROVADO' 
-      ? "Ao aprovar, o faturamento será gerado automaticamente e o relatório liberado para o familiar. Confirmar?"
-      : `Deseja rejeitar este plantão?`;
-
-    if (!window.confirm(mensagem)) return;
-
+  const atualizarStatus = async (plantaoId, novoStatus) => {
     try {
-      if (novoStatus === 'APROVADO') {
-        // Chamada para a nova rota de automação que criamos
-        await api.patch(`/plantoes/${id}/aprovar`);
-        toast.success("Plantão aprovado e faturamento gerado!");
-      } else {
-        // Mantém a rota genérica para rejeição ou outros status
-        await api.patch(`/plantoes/${id}/status`, { status: novoStatus });
-        toast.success("Status atualizado com sucesso!");
-      }
-      carregarDados();
+      const url = `/plantoes/${plantaoId}/status`;
+      const payload = { status: novoStatus };
+      await api.patch(url, payload);
+      toast.success(`Plantão ${novoStatus === 'APROVADO' ? 'aprovado' : 'reprovado'}!`);     
+      // Atualiza a lista na tela
+      carregarDados(); 
     } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "Erro ao atualizar status.");
+      console.error("Erro ao atualizar status:", error);
+      const msg = error.response?.data?.message || "Erro ao processar solicitação.";
+      toast.error(msg);
     }
   };
+
 
   // Funções de Exportação
   const exportarCSV = () => {
