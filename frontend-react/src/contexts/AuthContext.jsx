@@ -16,22 +16,18 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const response = await api.get("/users", {
-        params: { email, password }
+      // POST /auth/login returns { access_token, user }
+      const response = await api.post("/auth/login", {
+        email,
+        senha: password,
       });
 
-      const userData = response.data[0];
+      const { access_token, user: userData } = response.data;
 
-      if (!userData) {
-        throw new Error("Usuário ou senha inválidos");
-      }
-
-      if (userData.status !== "APROVADO") {
-        throw new Error("Usuário ainda não foi aprovado pelo administrador");
-      }
-
-      setUser(userData);
+      // Store JWT token so api.js interceptor attaches it to future requests
+      localStorage.setItem("token", access_token);
       localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
 
       return userData;
 
