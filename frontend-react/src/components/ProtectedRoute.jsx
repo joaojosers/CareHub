@@ -9,7 +9,8 @@ export default function ProtectedRoute({ perfilPermitido }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (perfilPermitido && user.role !== perfilPermitido) {
+  // Backend returns user.tipo (e.g. "ADMIN", "CUIDADOR", "FAMILIAR"), not user.role
+  if (perfilPermitido && user.tipo !== perfilPermitido) {
     return <Navigate to="/login" replace />;
   }
 
