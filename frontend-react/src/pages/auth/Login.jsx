@@ -27,11 +27,11 @@ export default function Login() {
 
       const user = await login(email, senha);
 
-      if (user.role === "ADMIN") {
+      if (user.tipo === "ADMIN") {
         navigate("/admin/dashboard");
-      } else if (user.role === "CUIDADOR") {
+      } else if (user.tipo === "CUIDADOR") {
         navigate("/cuidador/dashboard");
-      } else if (user.role === "FAMILIAR") {
+      } else if (user.tipo === "FAMILIAR") {
         navigate("/familiar/dashboard");
       }
     } catch (error) {
