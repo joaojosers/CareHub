@@ -11,17 +11,27 @@ export class PacientesService {
     async create(dto: CreatePacienteDto) {
         return this.databaseService.client.paciente.create({
             data: {
-                nome: dto.nome,
-                dataNascimento: new Date(dto.dataNascimento),
-                necessidades: dto.necessidades,
-                endereco: dto.endereco ? {
-                    create: {
-                        ...dto.endereco
-                    }
-                } : undefined
+            nome: dto.nome,
+            dataNascimento: new Date(dto.dataNascimento),
+            necessidades: dto.necessidades,
+            endereco: dto.endereco ? {
+                create: {
+                ...dto.endereco
+                }
+            } : undefined,
+            familiares: dto.familiarId ? {
+                create: {
+                userId: dto.familiarId, // ID do usuário que você criou antes
+                parentesco: dto.parentesco || 'Responsável',
+                isResponsavelFinanceiro: dto.isResponsavelFinanceiro
+                }
+            } : undefined
             },
             include: {
-                endereco: true
+            endereco: true,
+            familiares: {
+                include: { user: true }
+            }
             }
         });
     }

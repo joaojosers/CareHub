@@ -134,12 +134,14 @@ export default function DetalhePaciente() {
           <DetailGrid>
             <DetailItem label="Logradouro" value={paciente.endereco?.logradouro || "---"} />
             <DetailItem label="Número" value={paciente.endereco?.numero || "---"} />
+            <DetailItem label="Complemento" value={paciente.endereco?.complemento || "---"} />
             <DetailItem label="Bairro" value={paciente.endereco?.bairro || "---"} />
             <DetailItem 
               label="Cidade/UF" 
               value={paciente.endereco ? `${paciente.endereco.cidade} - ${paciente.endereco.estado}` : "---"} 
             />
             <DetailItem label="CEP" value={formatarCEP(paciente.endereco?.cep)} />
+            <DetailItem label="Referencia" value={paciente.endereco?.referencia || "---"} />
           </DetailGrid>
         </DetailSection>
 
@@ -148,6 +150,7 @@ export default function DetalhePaciente() {
           {familiarUser ? (
             <DetailGrid>
               <DetailItem label="Nome" value={familiarUser.nome} />
+               <DetailItem label="CPF" value={familiarUser.cpf} />
               <DetailItem label="Email" value={familiarUser.email} />
               <DetailItem label="Telefone" value={formatarTelefone(familiarUser.telefone)} />
               <DetailItem label="Parentesco" value={familiarVinculo?.parentesco || "---"} />

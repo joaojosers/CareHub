@@ -159,6 +159,10 @@ export default function EditarPaciente() {
                 <input name="endereco.numero" value={formData.endereco.numero} onChange={handleChange} />
               </div>
               <div>
+                <label className="detail-label">Complemento</label>
+                <input name="endereco.complemento" value={formData.endereco.complemento} onChange={handleChange} />
+              </div>
+              <div>
                 <label className="detail-label">Bairro</label>
                 <input name="endereco.bairro" value={formData.endereco.bairro} onChange={handleChange} />
               </div>
@@ -169,10 +173,6 @@ export default function EditarPaciente() {
               <div>
                 <label className="detail-label">UF</label>
                 <input name="endereco.estado" value={formData.endereco.estado} onChange={handleChange} maxLength="2" />
-              </div>
-              <div>
-                <label className="detail-label">Complemento</label>
-                <input name="endereco.complemento" value={formData.endereco.complemento} onChange={handleChange} />
               </div>
               <div style={{ gridColumn: 'span 2' }}>
                 <label className="detail-label">Ponto de Referência</label>

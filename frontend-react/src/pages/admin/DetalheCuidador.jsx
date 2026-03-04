@@ -91,10 +91,12 @@ export default function DetalheCuidador() {
         <DetailSection title="Endereço Residencial">
           {cuidador.endereco ? (
             <DetailGrid>
-              <DetailItem label="Logradouro" value={`${cuidador.endereco.rua}, ${cuidador.endereco.numero}`} />
+              <DetailItem label="Logradouro" value={cuidador.endereco.logradouro} />
+              <DetailItem label="Complemento" value={cuidador.endereco.complemento} />
               <DetailItem label="Bairro" value={cuidador.endereco.bairro} />
               <DetailItem label="Cidade/UF" value={`${cuidador.endereco.cidade} - ${cuidador.endereco.estado}`} />
               <DetailItem label="CEP" value={cuidador.endereco.cep} />
+              <DetailItem label="Referencia" value={cuidador.endereco.referencia} />
             </DetailGrid>
           ) : (
             <p style={{ color: '#94a3b8', fontSize: '14px', padding: '0 8px' }}>Endereço não cadastrado.</p>

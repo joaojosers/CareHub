@@ -50,12 +50,6 @@ export default function Cuidadores() {
     <>
       <div className="page-title">
         <h1>Cuidadores</h1>
-        <button 
-          className={mostrarForm ? "btn-secondary" : "btn-primary"} 
-          onClick={() => setMostrarForm(!mostrarForm)}
-        >
-          {mostrarForm ? "Voltar para Lista" : "Novo Cuidador"}
-        </button>
       </div>
 
       {mostrarForm ? (
@@ -110,20 +104,7 @@ export default function Cuidadores() {
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {c.status === "PENDENTE" && (
                       <div style={{ display: 'flex', gap: '8px', marginRight: '8px', borderRight: '1px solid #334155', paddingRight: '12px' }}>
-                        <button 
-                          className="action-badge action-aprovar"
-                          onClick={() => atualizarStatus(c.id, "APROVADO")}
-                          title="Aprovar Cuidador"
-                        >
-                          Aprovar
-                        </button>
-                        <button 
-                          className="action-badge action-rejeitar"
-                          onClick={() => atualizarStatus(c.id, "REJEITADO")}
-                          title="Rejeitar Cuidador"
-                        >
-                          Rejeitar
-                        </button>
+                        
                       </div>
                     )}
                     

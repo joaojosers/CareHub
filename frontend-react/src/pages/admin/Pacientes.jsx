@@ -25,9 +25,11 @@ export default function Pacientes() {
     referencia: "",
     familiarName: "",
     familiarCpf: "",
-    familiarEmail: "",
     familiarPhone: "",
+    familiarParentesco: "",
+    familiarEmail: "",
     familiarPassword: ""
+    
   };
 
   const [form, setForm] = useState(initialForm);
@@ -59,10 +61,26 @@ export default function Pacientes() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const pacienteResponse = await api.post("/pacientes", {
+       const userResponse = await api.post("/auth/register", {
+        nome: form.familiarName,
+        email: form.familiarEmail,
+        senha: form.familiarPassword,
+        telefone: form.familiarPhone,
+        cpf: form.familiarCpf.replace(/\D/g, ""),
+        tipo: "FAMILIAR",
+        status: "APROVADO"
+      });
+
+      const familiarIdGerado = userResponse.data.id;
+      
+      
+      await api.post("/pacientes", {
         nome: form.nome,
         dataNascimento: new Date(form.dataNascimento).toISOString(),
         necessidades: form.necessidades,
+        familiarId: familiarIdGerado,
+        parentesco: form.familiarParentesco,
+        isResponsavelFinanceiro: true,
         endereco: {
           logradouro: form.logradouro,
           numero: form.numero,
@@ -75,17 +93,6 @@ export default function Pacientes() {
         }
       });
 
-      const pacienteId = pacienteResponse.data.id;
-
-      await api.post("/auth/register", {
-        nome: form.familiarName,
-        email: form.familiarEmail,
-        senha: form.familiarPassword,
-        telefone: form.familiarPhone,
-        cpf: form.familiarCpf.replace(/\D/g, ""),
-        tipo: "FAMILIAR",
-        status: "APROVADO"
-      });
 
       alert("Cadastro completo realizado com sucesso!");
       setMostrarForm(false);
@@ -123,12 +130,14 @@ export default function Pacientes() {
             <div className="form-section">
               <h3>Endereço de Atendimento</h3>
               <div className="form-grid">
-                <input name="cep" placeholder="CEP" value={form.cep} onChange={handleChange} maxLength={9} required />
-                <input name="logradouro" placeholder="Logradouro" value={form.logradouro} onChange={handleChange} required />
+                <input name="cep" placeholder="CEP (apenas numeros)" value={form.cep} onChange={handleChange} maxLength={9} required />
+                <input name="logradouro" placeholder="Logradouro (Rua/Av)" value={form.logradouro} onChange={handleChange} required />
                 <input name="numero" placeholder="Número" value={form.numero} onChange={handleChange} required />
+                <input name="complemento" placeholder="Complemento (apto, bloco)" value={form.complemento} onChange={handleChange} required />
                 <input name="bairro" placeholder="Bairro" value={form.bairro} onChange={handleChange} required />
+                <input name="referencia" placeholder="Referencia (proximo a ....)" value={form.referencia} onChange={handleChange} required />
                 <input name="cidade" placeholder="Cidade" value={form.cidade} onChange={handleChange} required />
-                <input name="estado" placeholder="UF" value={form.estado} onChange={handleChange} maxLength={2} required />
+                <input name="estado" placeholder="UF (Ex: SP)" value={form.estado} onChange={handleChange} maxLength={2} required />
               </div>
             </div>
 
@@ -137,10 +146,27 @@ export default function Pacientes() {
               <div className="form-grid">
                 <input name="familiarName" placeholder="Nome do Responsável" onChange={handleChange} required />
                 <input name="familiarCpf" placeholder="CPF" onChange={handleChange} required />
-                <input name="familiarEmail" type="email" placeholder="E-mail" onChange={handleChange} required />
                 <input name="familiarPhone" placeholder="Telefone" onChange={handleChange} />
+                <input name="familiarEmail" type="email" placeholder="E-mail" onChange={handleChange} required />              
                 <input name="familiarPassword" type="password" placeholder="Senha" onChange={handleChange} required />
               </div>
+            </div>
+
+            <div className="form-group">
+              <select 
+                name="familiarParentesco" 
+                value={form.familiarParentesco} 
+                onChange={handleChange} 
+                required
+                style={{ width: '30%', height: '40px' }}
+              >
+                <option value="">Selecione o Parentesco...</option>
+                <option value="Filho(a)">Filho(a)</option>
+                <option value="Cônjuge">Cônjuge</option>
+                <option value="Irmão/Irmã">Irmão/Irmã</option>
+                <option value="Neto(a)">Neto(a)</option>
+                <option value="Outro">Outro</option>
+              </select>
             </div>
 
             <div className="form-actions">

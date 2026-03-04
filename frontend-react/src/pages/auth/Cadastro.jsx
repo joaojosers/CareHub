@@ -6,15 +6,15 @@ import { toast } from "react-hot-toast";
 export default function Cadastro() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false); // Novo estado para controlar a tela de sucesso
 
-  // Estado espelhado na estrutura do seu Swagger/DTO
   const [form, setForm] = useState({
     nome: "",
     email: "",
     senha: "",
     cpf: "",
     telefone: "",
-    especialidades: "", // Vamos converter para array no submit
+    especialidades: "",
     endereco: {
       logradouro: "",
       numero: "",
@@ -27,13 +27,11 @@ export default function Cadastro() {
     }
   });
 
-  // Handler para campos simples (nome, email, etc)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handler exclusivo para o objeto de endereço
   const handleEnderecoChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -46,23 +44,19 @@ export default function Cadastro() {
     e.preventDefault();
     setLoading(true);
 
-    // Preparando o payload exatamente como o Swagger pede
     const payload = {
       ...form,
-      // Transforma a string de especialidades em um Array
       especialidades: form.especialidades
         ? form.especialidades.split(",").map((s) => s.trim())
         : [],
-      // Mantemos estruturas vazias para o que não foi implementado ainda
       dadosBancarios: {}, 
       documentos: []
     };
 
     try {
       await api.post("/cuidadores", payload);
-      toast.success("Cadastro realizado! Aguarde a aprovação do administrador.");
-      
-      setTimeout(() => navigate("/login"), 3000);
+      // Ativamos a tela de sucesso em vez do toast temporário
+      setIsSuccess(true);
     } catch (error) {
       const msg = error.response?.data?.message || "Erro ao realizar cadastro.";
       toast.error(Array.isArray(msg) ? msg[0] : msg);
@@ -71,14 +65,36 @@ export default function Cadastro() {
     }
   };
 
+  // TELA DE SUCESSO PÓS-CADASTRO
+  if (isSuccess) {
+    return (
+      <div className="auth-wrapper">
+        <div className="auth-card" style={{ maxWidth: '500px', textAlign: 'center', padding: '40px' }}>
+          <div style={{ fontSize: '50px', marginBottom: '20px' }}>✅</div>
+          <h2 style={{ color: '#10b981', marginBottom: '15px' }}>Cadastro Realizado!</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '30px', lineHeight: '1.6' }}>
+            Suas informações foram enviadas com sucesso. <br />
+            <strong>Aguarde a aprovação do administrador</strong> para acessar a plataforma.
+          </p>
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%' }} 
+            onClick={() => navigate("/login")}
+          >
+            Entendido, ir para o Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // FORMULÁRIO ORIGINAL
   return (
     <div className="auth-wrapper">
       <div className="auth-card" style={{ maxWidth: '800px' }}>
         <h1 className="auth-title">Cadastro de Cuidador</h1>
 
         <form className="form-layout" onSubmit={handleSubmit}>
-          
-          {/* SEÇÃO 1: DADOS BÁSICOS */}
           <div className="form-section">
             <h3>Dados Pessoais & Profissionais</h3>
             <div className="form-grid">
@@ -96,7 +112,6 @@ export default function Cadastro() {
             </div>
           </div>
 
-          {/* SEÇÃO 2: ENDEREÇO (Conforme Swagger) */}
           <div className="form-section">
             <h3>Endereço de Residência</h3>
             <div className="form-grid">

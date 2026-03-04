@@ -34,17 +34,12 @@ export default function DashboardAdmin() {
 
       if (resStats.status === "fulfilled") {
         setStats(resStats.value.data);
-      } else {
-        console.error("Erro ao carregar estatísticas:", resStats.reason);
-        // Se der 403, o 'stats' continua com os valores zerados definidos no useState
-      }
+      } 
 
       if (resPlantoes.status === "fulfilled") {
         const ultimos = resPlantoes.value.data.slice(0, 5);
         setPlantoes(ultimos);
-      } else {
-        console.error("Erro ao carregar plantões:", resPlantoes.reason);
-      }
+      } 
 
     } catch (error) {
       console.error("Erro inesperado:", error);
@@ -110,7 +105,7 @@ export default function DashboardAdmin() {
         <h2>Últimos Plantões</h2>
 
         {plantoes.length === 0 ? (
-          <div className="empty-state-card">Nenhum plantão registrado ou acesso negado.</div>
+          <div className="empty-state-card">Nenhum plantão registrado.</div>
         ) : (
           <table className="recent-table">
             <thead>
