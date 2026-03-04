@@ -1,13 +1,14 @@
 import { NavLink } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
-import Logo from "../Logo"; 
+import Logo from "../Logo";
 
 export default function Sidebar() {
   const { user } = useContext(AuthContext);
 
   function renderMenu() {
-    switch (user?.role) {
+    // Backend returns user.tipo ('ADMIN', 'CUIDADOR', 'FAMILIAR'), not user.role
+    switch (user?.tipo) {
       case "ADMIN":
         return (
           <>
@@ -45,7 +46,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       {/* 🔹 Logo reutilizado */}
       <Logo />
-      
+
       <nav className="sidebar-menu">
         {renderMenu()}
       </nav>
