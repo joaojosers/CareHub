@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "@nestjs/common": "^11.1.13",
+    "@nestjs/config": "^4.0.3",
+    "@nestjs/core": "^11.1.13",
+    "@nestjs/swagger": "^11.2.6",
+    "@prisma/client": "^7.4.0",
+    "axios": "^1.13.5",
+    "bcrypt": "^6.0.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.13",
+    "@types/bcrypt": "^6.0.0",
+    "@types/jest": "^30.0.0",
+    "typescript": "^5.9.3"
+  },
+
+  "scripts": {
+  "dev": "next dev",
+  "start": "next start"
+ },
+ 
+ "scripts": {
+  "dev": "next dev",
+  "start": "next start"
+}
+
+
+
+}
