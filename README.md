@@ -64,7 +64,7 @@ O sistema centraliza toda a  operação, eliminando planilhas e processos manuai
 
 ```
 CareHub/
-├── frontend/           # Aplicação React (SPA) via Vite
+├── frontend-react/     # Aplicação React (SPA) via Vite
 ├── backend/            # API REST em NestJS (TypeScript)
 |     └── prisma/       # Schemas e Migrations (PostgreSQL)
 └── README.md           # Documentação do projeto 
@@ -122,7 +122,7 @@ Para testar o sistema, use as seguintes credenciais:
 cd backend && npm run start:dev
 
 # Frontend (Porta 5173)
-cd frontend && npm run dev
+cd frontend-react && npm run dev
 ```
 
 ## 👨‍💻 Autores
