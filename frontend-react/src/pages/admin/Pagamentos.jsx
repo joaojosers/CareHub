@@ -1,96 +1,141 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "../../services/api";
-import "../../styles/ui.css";
+import { toast } from "react-hot-toast";
 
-export default function FinanceiroAdmin() {
-  const [pagamentos, setPagamentos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filtroStatus, setFiltroStatus] = useState("");
+import PageTitle from "../../components/ui/PageTitle";
+import DetailCard from "../../components/ui/DetailCard";
+import StatusBadge from "../../components/ui/StatusBadge";
 
-  useEffect(() => {
-    carregarPagamentos();
-  }, [filtroStatus]);
+export default function Financeiro() {
+  const [relatorio, setRelatorio] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  async function carregarPagamentos() {
+  const carregarTodosPagamentos = useCallback(async () => {
     try {
       setLoading(true);
-      // Chama seu método findAll com filtro de status opcional
-      const res = await api.get(`/pagamentos`, { params: { status: filtroStatus } });
-      setPagamentos(res.data);
+      // Chamada para a listagem geral de pagamentos
+      const response = await api.get("/pagamentos"); 
+      
+      // Ajuste para aceitar tanto array direto quanto objeto com detalhes
+      const dados = Array.isArray(response.data) ? response.data : (response.data.detalhes || []);
+      setRelatorio(dados);
     } catch (error) {
-      console.error("Erro ao buscar pagamentos");
+      console.error(error);
+      toast.error("Erro ao carregar pagamentos.");
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function handleProcessar(id) {
-    if (!window.confirm("Deseja marcar como PROCESSADO?")) return;
-    try {
-      await api.patch(`/pagamentos/${id}/processar`); // Rota para marcarComoProcessado
-      carregarPagamentos();
-    } catch (err) { alert("Erro ao processar"); }
-  }
+  useEffect(() => {
+    carregarTodosPagamentos();
+  }, [carregarTodosPagamentos]);
 
-  async function handleConfirmar(id) {
-    const comprovante = prompt("Digite o número do comprovante/transação:");
-    if (!comprovante) return;
+  const handleProcessarPagamento = async (pagamentoId) => {
+    if (!window.confirm("Deseja processar este pagamento via Mercado Pago agora?")) return;
     try {
-      await api.patch(`/pagamentos/${id}/confirmar`, { numeroComprovante: comprovante });
-      carregarPagamentos();
-    } catch (err) { alert("Erro ao confirmar"); }
-  }
+      await api.patch(`/pagamentos/${pagamentoId}/processar`);
+      toast.success("Pagamento enviado ao Mercado Pago!");
+      carregarTodosPagamentos();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Erro no gateway de pagamento.");
+    }
+  };
+
+  const handleConfirmarManual = async (pagamentoId) => {
+    if (!window.confirm("Confirmar que o PIX foi feito manualmente fora da plataforma?")) return;
+    try {
+      await api.patch(`/pagamentos/${pagamentoId}/confirmar-pagamento`);
+      toast.success("Pagamento confirmado manualmente.");
+      carregarTodosPagamentos();
+    } catch (error) {
+      toast.error("Erro ao confirmar pagamento.");
+    }
+  };
+
+  const formatCurrency = (value) => 
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0);
+
+  const totalGeral = relatorio.reduce((acc, curr) => acc + Number(curr.valorLiquido || 0), 0);
 
   return (
-    <div className="admin-container">
-      <div className="page-title">
-        <h1>Financeiro & Repasses</h1>
-        <select onChange={(e) => setFiltroStatus(e.target.value)} className="btn-view" style={{background: '#1e293b', width: 'auto'}}>
-          <option value="">Todos os Status</option>
-          <option value="PENDENTE">Pendentes</option>
-          <option value="PROCESSADO">Prontos p/ Pagar</option>
-          <option value="PAID">Pagos</option>
-        </select>
+    <>
+      <PageTitle title="Gestão Financeira" />
+
+      <div style={{ marginBottom: "25px", display: "flex", justifyContent: "flex-end" }}>
+        <div className="summary-box" style={{ background: "#1e293b", padding: "15px 25px", borderRadius: "12px", borderLeft: "4px solid #22c55e" }}>
+          <span style={{ fontSize: "12px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px" }}>Total Líquido Acumulado</span>
+          <h2 style={{ margin: 0, color: "#22c55e", fontSize: "24px" }}>{formatCurrency(totalGeral)}</h2>
+        </div>
       </div>
 
-      <div className="detail-card" style={{ overflowX: 'auto' }}>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Cuidador</th>
-              <th>Horas</th>
-              <th>Valor Bruto</th>
-              <th>Líquido</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pagamentos.map((p) => (
-              <tr key={p.id}>
-                <td>{new Date(p.criadoEm).toLocaleDateString()}</td>
-                <td>{p.cuidador?.user?.nome}</td>
-                <td>{p.plantao?.horasTrabalhadas}h</td>
-                <td>R$ {Number(p.valorBruto).toFixed(2)}</td>
-                <td style={{ color: '#10b981', fontWeight: 'bold' }}>R$ {Number(p.valorLiquido).toFixed(2)}</td>
-                <td>
-                  <span className={`badge-${p.status.toLowerCase()}`}>{p.status}</span>
-                </td>
-                <td>
-                  {p.status === 'PENDENTE' && (
-                    <button onClick={() => handleProcessar(p.id)} className="btn-approve">Validar</button>
-                  )}
-                  {p.status === 'PROCESSADO' && (
-                    <button onClick={() => handleConfirmar(p.id)} className="btn-view">Confirmar PIX</button>
-                  )}
-                  {p.status === 'PAID' && <span style={{fontSize: '12px', color: '#94a3b8'}}>ID: {p.numeroComprovante}</span>}
-                </td>
+      <DetailCard>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", minWidth: "950px" }}>
+            <thead>
+              <tr style={{ textAlign: "left", borderBottom: "2px solid #1e293b" }}>
+                <th style={{ padding: "12px", width: "12%", color: "#94a3b8" }}>Data</th>
+                <th style={{ padding: "12px", width: "23%", color: "#94a3b8" }}>Cuidador</th>
+                <th style={{ padding: "12px", width: "8%", color: "#94a3b8" }}>Horas</th>
+                <th style={{ padding: "12px", width: "12%", color: "#94a3b8" }}>V. Bruto</th>
+                <th style={{ padding: "12px", width: "12%", color: "#94a3b8" }}>V. Líquido</th>
+                <th style={{ padding: "12px", width: "13%", color: "#94a3b8" }}>Status</th>
+                <th style={{ padding: "12px", width: "20%", textAlign: "right", color: "#94a3b8" }}>Ações</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan="7" style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>Carregando dados...</td></tr>
+              ) : relatorio.length === 0 ? (
+                <tr><td colSpan="7" style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>Nenhum registro financeiro encontrado.</td></tr>
+              ) : (
+                relatorio.map((pg) => (
+                  <tr key={pg.id} style={{ borderBottom: "1px solid #1e293b" }}>
+                    <td style={{ padding: "12px", fontSize: "14px", color: "#fff" }}>
+                      {new Date(pg.criadoEm).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td style={{ padding: "12px" }}>
+                      <div style={{ fontWeight: "bold", color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {pg.cuidador?.user?.nome || "N/A"}
+                      </div>
+                      <small style={{ color: "#64748b" }}>{pg.cuidador?.mercadoPago || "Sem chave"}</small>
+                    </td>
+                    <td style={{ padding: "12px", color: "#fff" }}>{pg.plantao?.horasTrabalhadas || 0}h</td>
+                    <td style={{ padding: "12px", color: "#fff" }}>{formatCurrency(pg.valorBruto)}</td>
+                    <td style={{ padding: "12px", color: "#22c55e", fontWeight: "bold" }}>{formatCurrency(pg.valorLiquido)}</td>
+                    <td style={{ padding: "12px" }}><StatusBadge status={pg.status} /></td>
+                    <td style={{ padding: "12px", textAlign: "right" }}>
+                      {/* BOTAO DE AÇÕES APARECE APENAS SE ESTIVER PENDENTE */}
+                      <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                        {pg.status === "PENDENTE" ? (
+                          <>
+                            <button 
+                              className="btn-view" 
+                              onClick={() => handleConfirmarManual(pg.id)} 
+                              style={{ padding: "6px 10px", fontSize: "11px", whiteSpace: "nowrap" }}
+                            >
+                              Confirmar PIX
+                            </button>
+                            <button 
+                              className="btn-primary" 
+                              onClick={() => handleProcessarPagamento(pg.id)} 
+                              style={{ padding: "6px 10px", fontSize: "11px", whiteSpace: "nowrap" }}
+                            >
+                              Pagar Agora
+                            </button>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>Concluído</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DetailCard>
+    </>
   );
 }

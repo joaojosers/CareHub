@@ -1,55 +1,55 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import { CreatePlantaoDto } from './dto/create-plantao.dto';
-import { PlantaoStatus } from '@prisma/client';
-import { PagamentosService } from '../pagamentos/pagamentos.service';
-
-@Injectable()
-export class PlantoesService {
-    // 1. Mantenha os nomes consistentes (usei 'database' para bater com o restante do seu código)
-    constructor(
-        private database: DatabaseService, 
-        private pagamentosService: PagamentosService
-    ) { }
-    
-    async create(dto: CreatePlantaoDto) {
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PlantoesService = void 0;
+const common_1 = require("@nestjs/common");
+const database_service_1 = require("../database/database.service");
+const client_1 = require("@prisma/client");
+const pagamentos_service_1 = require("../pagamentos/pagamentos.service");
+let PlantoesService = class PlantoesService {
+    database;
+    pagamentosService;
+    constructor(database, pagamentosService) {
+        this.database = database;
+        this.pagamentosService = pagamentosService;
+    }
+    async create(dto) {
         const inicio = new Date(dto.dataInicio);
         const fim = new Date(dto.dataFim);
-
         if (fim <= inicio) {
-            throw new BadRequestException('A data de fim deve ser posterior à data de início');
+            throw new common_1.BadRequestException('A data de fim deve ser posterior à data de início');
         }
-
-        // Calcular horas trabalhadas
         const diffMs = fim.getTime() - inicio.getTime();
         const horasTrabalhadas = diffMs / (1000 * 60 * 60);
-
-        // Verificar se o paciente existe
         const paciente = await this.database.client.paciente.findUnique({
             where: { id: dto.pacienteId },
         });
-        if (!paciente) throw new NotFoundException('Paciente não encontrado');
-
+        if (!paciente)
+            throw new common_1.NotFoundException('Paciente não encontrado');
         if (dto.cuidadorId) {
-            // Tenta achar o CuidadorDetalhes onde userId = dto.cuidadorId
             const cuidadorDetalhes = await this.database.client.cuidadorDetalhes.findUnique({
                 where: { userId: dto.cuidadorId },
             });
-
             if (!cuidadorDetalhes) {
-                // Se não achou pelo userId, tenta achar pelo ID direto
                 const direto = await this.database.client.cuidadorDetalhes.findUnique({
                     where: { id: dto.cuidadorId },
                 });
-
                 if (!direto) {
-                    throw new NotFoundException('Cuidador não encontrado (ID inválido)');
+                    throw new common_1.NotFoundException('Cuidador não encontrado (ID inválido)');
                 }
-            } else {
+            }
+            else {
                 dto.cuidadorId = cuidadorDetalhes.id;
             }
         }
-
         return this.database.client.plantao.create({
             data: {
                 pacienteId: dto.pacienteId,
@@ -57,7 +57,7 @@ export class PlantoesService {
                 dataInicio: inicio,
                 dataFim: fim,
                 horasTrabalhadas,
-                status: PlantaoStatus.PENDENTE,
+                status: client_1.PlantaoStatus.PENDENTE,
                 relatorioAtividade: dto.relatorio ? {
                     create: {
                         descricao: dto.relatorio.descricao,
@@ -78,7 +78,6 @@ export class PlantoesService {
             }
         });
     }
-
     async findAll() {
         return this.database.client.plantao.findMany({
             include: {
@@ -89,14 +88,12 @@ export class PlantoesService {
             orderBy: { dataInicio: 'desc' }
         });
     }
-
-    async findByCuidador(userId: string) {
+    async findByCuidador(userId) {
         const cuidador = await this.database.client.cuidadorDetalhes.findUnique({
             where: { userId }
         });
-
-        if (!cuidador) throw new NotFoundException('Perfil de cuidador não encontrado');
-
+        if (!cuidador)
+            throw new common_1.NotFoundException('Perfil de cuidador não encontrado');
         return this.database.client.plantao.findMany({
             where: { cuidadorId: cuidador.id },
             include: {
@@ -106,14 +103,11 @@ export class PlantoesService {
             orderBy: { dataInicio: 'desc' }
         });
     }
-
-    async findByFamiliar(userId: string) {
+    async findByFamiliar(userId) {
         const vinculos = await this.database.client.familiarVinculo.findMany({
             where: { userId }
         });
-
         const pacienteIds = vinculos.map(v => v.pacienteId);
-
         return this.database.client.plantao.findMany({
             where: { pacienteId: { in: pacienteIds } },
             include: {
@@ -124,37 +118,35 @@ export class PlantoesService {
             orderBy: { dataInicio: 'desc' }
         });
     }
-
-    async aprovarPlantao(id: string) {
+    async aprovarPlantao(id) {
         const plantaoExiste = await this.database.client.plantao.findUnique({
             where: { id },
-            include: { cuidador: true } // Importante para garantir que os dados existem
+            include: { cuidador: true }
         });
-
         if (!plantaoExiste) {
-            throw new NotFoundException(`Plantão ${id} não encontrado`);
+            throw new common_1.NotFoundException(`Plantão ${id} não encontrado`);
         }
-
-        // 1. Atualiza o status
         const plantao = await this.database.client.plantao.update({
             where: { id },
-            data: { status: PlantaoStatus.APROVADO },
+            data: { status: client_1.PlantaoStatus.APROVADO },
         });
-
-        // 2. Criação do pagamento (Removido cuidadorId para respeitar o DTO)
         try {
             await this.pagamentosService.create({
                 plantaoId: id,
-                metodoPagamento: 'PIX', 
-                // Se o erro persistir em outros campos, verifique o CreatePagamentoDto
+                metodoPagamento: 'PIX',
             });
-            
             return { message: 'Plantão aprovado e faturamento gerado.', plantao };
-        } catch (error) {
+        }
+        catch (error) {
             console.error('ERRO NO PAGAMENTO:', error.message);
             return { message: 'Plantão aprovado, mas erro no faturamento.', plantao };
         }
     }
-}
-
-
+};
+exports.PlantoesService = PlantoesService;
+exports.PlantoesService = PlantoesService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [database_service_1.DatabaseService,
+        pagamentos_service_1.PagamentosService])
+], PlantoesService);
+//# sourceMappingURL=plantoes.service.js.map
