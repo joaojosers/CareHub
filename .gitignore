@@ -1,5 +1,16 @@
+# 1. Ignorar tudo na raiz
 /*
+
+# 2. Abrir as exceções (O "!" significa "Não ignore")
+# Note que a barra no final / é importante para pastas
 !/frontend-react/
 !/backend/
 !/README.md
 !/.gitignore
+
+# 3. Regras de segurança (Bloquear o que não deve subir de jeito nenhum)
+# O **/ garante que ele procure em qualquer nível de pasta
+**/node_modules/
+**/dist/
+**/.env
+**/.DS_Store
