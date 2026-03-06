@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsString, IsOptional, IsDateString, ValidateNested } from 'class-validator';
+import { 
+  IsNotEmpty, 
+  IsString, 
+  IsOptional, 
+  IsDateString, 
+  ValidateNested, 
+  IsUUID,     
+  IsBoolean   
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EnderecoDto } from '../../common/dto/endereco.dto';
@@ -24,5 +32,20 @@ export class CreatePacienteDto {
     @ValidateNested()
     @Type(() => EnderecoDto)
     endereco?: EnderecoDto;
+
+    @ApiProperty({ description: 'ID do usuário (familiar) já cadastrado', example: '0d85a3dd-289c-474c-84e6-a95ba1939bc3' })
+    @IsUUID()
+    @IsNotEmpty({ message: 'O ID do familiar é obrigatório para o vínculo' })
+    familiarId: string;
+
+    @ApiProperty({ description: 'Grau de parentesco', example: 'Filho(a)' })
+    @IsString()
+    @IsNotEmpty({ message: 'O parentesco é obrigatório' })
+    parentesco: string;
+
+    @ApiPropertyOptional({ description: 'Define se é o responsável financeiro', default: false })
+    @IsBoolean()
+    @IsOptional()
+    isResponsavelFinanceiro?: boolean;
 }
 

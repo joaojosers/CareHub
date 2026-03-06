@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateCuidadorDto } from './dto/create-cuidador.dto';
 import { UserRole } from '@prisma/client';
@@ -42,7 +42,7 @@ export class CuidadoresService {
                     create: {
                         especialidades: dto.especialidades || [],
                         dadosBancarios: dto.dadosBancarios || {},
-                        mercadoPago: null, // Pode ser preenchido via PATCH
+                        mercadoPago: null,
                         documentos: dto.documentos ? {
                             create: dto.documentos.map(doc => ({
                                 tipo: doc.tipo,
@@ -70,7 +70,11 @@ export class CuidadoresService {
                 endereco: true,
                 cuidador: {
                     include: {
-                        documentos: true
+                        documentos: true,
+                        // Inclui contagem de pacientes para a listagem geral
+                        _count: {
+                            select: { pacientes: true }
+                        }
                     }
                 },
             },
@@ -79,17 +83,70 @@ export class CuidadoresService {
     }
 
     async findOne(id: string) {
-        return this.databaseService.client.user.findUnique({
+        const cuidador = await this.databaseService.client.user.findUnique({
             where: { id, tipo: UserRole.CUIDADOR },
             include: {
                 endereco: true,
                 cuidador: {
                     include: {
-                        documentos: true
+                        documentos: true,
+                        // BUSCA OS PACIENTES VINCULADOS
+                        pacientes: {
+                            include: {
+                                paciente: true // Traz os dados básicos do paciente (nome, etc)
+                            }
+                        },
+                        // BUSCA OS ÚLTIMOS PLANTÕES (Histórico)
+                        plantoes: {
+                            take: 10,
+                            orderBy: { dataInicio: 'desc' },
+                            include: {
+                                paciente: {
+                                    select: { nome: true }
+                                }
+                            }
+                        },
+                        // BUSCA PAGAMENTOS (Opcional, mas útil para o Admin)
+                        pagamentos: {
+                            take: 5,
+                            orderBy: { criadoEm: 'desc' }
+                        }
                     }
                 },
             },
         });
-    }
-}
 
+        if (!cuidador) {
+            throw new NotFoundException('Cuidador não encontrado');
+        }
+
+        return cuidador;
+    }
+
+    async findPacientesByCuidador(userId: string) {
+        // Buscamos o vínculo através do User -> CuidadorDetalhes -> Vinculos -> Paciente
+        const detalhes = await this.databaseService.client.cuidadorDetalhes.findUnique({
+            where: { userId: userId }, // Assumindo que você tem userId em CuidadorDetalhes
+            include: {
+            pacientes: {
+                include: {
+                paciente: {
+                    include: {
+                    endereco: true
+                    }
+                }
+                }
+            }
+            }
+        });
+
+        if (!detalhes) return [];
+
+        // Mapeamos para retornar uma lista simples de pacientes
+        return detalhes.pacientes.map(v => ({
+            ...v.paciente,
+            valorHora: v.valorHoraAcordado, // Informação útil do vínculo
+            dataInicio: v.dataVinculo
+        }));
+        }
+}

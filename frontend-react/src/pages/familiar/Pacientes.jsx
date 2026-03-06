@@ -1,99 +1,100 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import Card from "../../components/ui/Card";
+import "../../styles/ui.css";
 
-export default function Paciente() {
-  const [paciente, setPaciente] = useState(null);
-  const [cuidador, setCuidador] = useState(null);
+export default function PacientesFamiliar() {
+  const [pacientes, setPacientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    carregarDados();
+    const carregarPacientes = async () => {
+      try {
+        setLoading(true);
+        const userJson = localStorage.getItem("@App:user");
+        if (!userJson) return;
+
+        const userStored = JSON.parse(userJson);
+        const res = await api.get(`/users/${userStored.id}`);
+
+        if (res.data && res.data.familiares) {
+          const pacientesExtraidos = res.data.familiares.map(v => v.paciente);
+          setPacientes(pacientesExtraidos);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar pacientes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    carregarPacientes();
   }, []);
 
-  const carregarDados = async () => {
-    try {
-      const usuarioLogado = JSON.parse(localStorage.getItem("user"));
-
-      if (!usuarioLogado || usuarioLogado.role !== "FAMILIAR") return;
-
-      const [pacientesRes, usuariosRes, assignmentsRes] = await Promise.all([
-        api.get("/patients"),
-        api.get("/users"),
-        api.get("/assignments")
-      ]);
-
-      // 1️⃣ Buscar paciente pelo patientId do familiar
-      const pacienteVinculado = pacientesRes.data.find(
-        (p) => p.id === usuarioLogado.patientId
-      );
-
-      if (!pacienteVinculado) return;
-
-      setPaciente(pacienteVinculado);
-
-      // 2️⃣ Buscar assignment ativo desse paciente
-      const assignmentAtivo = assignmentsRes.data.find(
-        (a) =>
-          a.patientId === pacienteVinculado.id &&
-          a.status === "ATIVO"
-      );
-
-      if (!assignmentAtivo) return;
-
-      // 3️⃣ Buscar cuidador
-      const cuidadorVinculado = usuariosRes.data.find(
-        (u) => u.id === assignmentAtivo.caregiverId
-      );
-
-      setCuidador(cuidadorVinculado);
-
-    } catch (error) {
-      console.error("Erro ao carregar dados do paciente");
-    }
-  };
-
-  if (!paciente) {
-    return (
-      <div className="page-wrapper">
-        <h2>Nenhum paciente vinculado</h2>
-      </div>
-    );
-  }
+  if (loading) return <div className="loading-state">Carregando pacientes...</div>;
 
   return (
-    <div className="page-wrapper">
-
+    <div className="admin-container">
       <div className="page-title">
-        <h1>Informações do Paciente</h1>
+        <h1>Meus Dependentes</h1>
+        <p> Gerencie e acompanhe o histórico de cuidados dos seus dependentes.</p>
       </div>
 
-      <Card>
-        <div className="detail-section">
-          <div className="detail-grid">
-
-            <div className="detail-item">
-              <span className="detail-label">Nome</span>
-              <span className="detail-value">{paciente.name}</span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">Cuidador</span>
-              <span className="detail-value">
-                {cuidador ? cuidador.name : "Não vinculado"}
-              </span>
-            </div>
-
-            <div className="detail-item">
-              <span className="detail-label">Status do Vínculo</span>
-              <span className="detail-value">
-                {cuidador ? "ATIVO" : "Sem cuidador ativo"}
-              </span>
-            </div>
-
-          </div>
+      {pacientes.length === 0 ? (
+        <div className="empty-state-card">
+          <p>Nenhum paciente vinculado à sua conta no momento.</p>
         </div>
-      </Card>
+      ) : (
+        <div className="detail-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+          {pacientes.map((paciente) => (
+            <div key={paciente.id} className="detail-card" style={{ borderTop: '4px solid #8b5cf6', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              
+              {/* Cabeçalho do Card */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h2 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '5px' }}>{paciente.nome}</h2>
+                  <span className="badge-success" style={{ fontSize: '11px', padding: '4px 10px' }}>
+                    {paciente.status}
+                  </span>
+                </div>
+                <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '10px', borderRadius: '50%' }}>
+                  👤
+                </div>
+              </div>
 
+              <hr style={{ borderColor: '#334155', margin: '5px 0' }} />
+
+              {/* Informações de Endereço */}
+              <div className="detail-item">
+                <span className="detail-label">Local de Atendimento</span>
+                <span className="detail-value" style={{ fontSize: '14px' }}>
+                  {paciente.endereco?.logradouro ? (
+                    `${paciente.endereco.logradouro}, ${paciente.endereco.numero}`
+                  ) : (
+                    <em style={{ color: '#64748b' }}>Endereço não cadastrado</em>
+                  )}
+                </span>
+                {paciente.endereco?.bairro && (
+                  <span className="detail-value" style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    {paciente.endereco.bairro} - {paciente.endereco.cidade}
+                  </span>
+                )}
+              </div>
+
+              {/* Ações */}
+              <div style={{ marginTop: 'auto', paddingTop: '10px' }}>
+                <button 
+                  className="btn-view" 
+                  style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                  onClick={() => navigate(`/familiar/relatorios/${paciente.id}`)}
+                >
+                  <span>📋</span> Ver historico de cuidados
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

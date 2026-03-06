@@ -29,5 +29,19 @@ services:
       JWT_SECRET: carehub_super_secret_key_2026
       NODE_ENV: production
 
+  frontend:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile
+      args:
+        # A URL de acesso PÚBICA para sua API, rodando na mesma máquina com a porta 3000
+        - VITE_API_URL=http://138.249.110.133:3000
+    container_name: carehub-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:

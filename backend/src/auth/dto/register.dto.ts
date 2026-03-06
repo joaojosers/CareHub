@@ -1,6 +1,8 @@
 import { IsEmail, IsNotEmpty, MinLength, IsString, IsEnum } from 'class-validator';
 import { UserRole } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
+import { UserStatus } from '@prisma/client';
 
 export class RegisterDto {
     @ApiProperty({ description: 'Nome completo do usuário', example: 'João da Silva' })
@@ -23,7 +25,18 @@ export class RegisterDto {
     @IsNotEmpty({ message: 'O CPF é obrigatório' })
     cpf: string;
 
+    @ApiProperty({ example: '11999998888', required: false })
+    @IsString()
+    @IsOptional() // Como no seu banco ele aceita null, aqui é opcional
+    telefone?: string;
+     
     @ApiProperty({ description: 'Tipo de usuário (CUIDADOR ou FAMILIAR)', enum: UserRole, example: 'CUIDADOR' })
     @IsEnum(UserRole, { message: 'O tipo de usuário deve ser CUIDADOR ou FAMILIAR' })
     tipo: UserRole;
+
+    @IsOptional()
+    @IsEnum(UserStatus)
+    status?: UserStatus;
+
+  
 }

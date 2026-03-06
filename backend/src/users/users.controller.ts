@@ -18,8 +18,16 @@ export class UsersController {
     @ApiOperation({ summary: 'Listar usuários (todos ou por status)', description: 'Útil para ver quem está PENDENTE.' })
     @ApiQuery({ name: 'status', enum: UserStatus, required: false })
     @ApiResponse({ status: 200, description: 'Lista de usuários retornada.' })
-    async findAll(@Query('status') status?: UserStatus) {
-        return this.usersService.findAll(status);
+    async findAll(
+        @Query('status') status?: UserStatus,
+        @Query('tipo') tipo?: UserRole // Adicione este Query param
+    ) {
+        return this.usersService.findAll(status, tipo);
+    }
+
+    @Get(':id') // 2º Busca por ID (Esta deve vir DEPOIS da listagem geral)
+    findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
     }
 
     @Patch(':id/approve')
@@ -40,4 +48,5 @@ export class UsersController {
     async rejectUser(@Param('id') id: string) {
         return this.usersService.updateStatus(id, UserStatus.REJEITADO);
     }
+
 }

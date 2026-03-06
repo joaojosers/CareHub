@@ -90,7 +90,7 @@ describe('CuidadoresService', () => {
         it('deve criptografar a senha e criar o cuidador com relações aninhadas', async () => {
             // Simulamos que não existe ninguém com esse email/cpf
             database.client.user.findFirst.mockResolvedValue(null);
-            
+
             // Mockamos o comportamento do bcrypt
             (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
             (bcrypt.hash as jest.Mock).mockResolvedValue('senha-hash');
@@ -146,7 +146,14 @@ describe('CuidadoresService', () => {
                 where: { tipo: UserRole.CUIDADOR },
                 include: {
                     endereco: true,
-                    cuidador: { include: { documentos: true } }
+                    cuidador: {
+                        include: {
+                            documentos: true,
+                            _count: {
+                                select: { pacientes: true }
+                            }
+                        }
+                    }
                 },
                 orderBy: { dataCadastro: 'desc' },
             });
@@ -165,7 +172,23 @@ describe('CuidadoresService', () => {
                 where: { id: 'uuid-123', tipo: UserRole.CUIDADOR },
                 include: {
                     endereco: true,
-                    cuidador: { include: { documentos: true } }
+                    cuidador: {
+                        include: {
+                            documentos: true,
+                            pacientes: {
+                                include: { paciente: true }
+                            },
+                            plantoes: {
+                                take: 10,
+                                orderBy: { dataInicio: 'desc' },
+                                include: { paciente: { select: { nome: true } } }
+                            },
+                            pagamentos: {
+                                take: 5,
+                                orderBy: { criadoEm: 'desc' }
+                            }
+                        }
+                    }
                 }
             });
             expect(result).toEqual(mockUser);

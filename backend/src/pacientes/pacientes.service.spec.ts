@@ -58,12 +58,12 @@ describe('PacientesService', () => {
             };
 
             // Simulamos o retorno do banco (Data já convertida para objeto Date)
-            const mockCreatedPaciente = { 
-                id: 'uuid-paciente-123', 
-                ...createDtoMock, 
-                dataNascimento: new Date(createDtoMock.dataNascimento) 
+            const mockCreatedPaciente = {
+                id: 'uuid-paciente-123',
+                ...createDtoMock,
+                dataNascimento: new Date(createDtoMock.dataNascimento)
             };
-            
+
             database.client.paciente.create.mockResolvedValue(mockCreatedPaciente);
 
             const result = await service.create(createDtoMock);
@@ -75,12 +75,16 @@ describe('PacientesService', () => {
                     dataNascimento: new Date(createDtoMock.dataNascimento), // Aqui validamos a conversão!
                     necessidades: createDtoMock.necessidades,
                     endereco: {
-                        create: { ...createDtoMock.endereco }
-                    }
+                        create: { ...createDtoMock.endereco },
+                    },
+                    familiares: undefined,
                 },
                 include: {
-                    endereco: true
-                }
+                    endereco: true,
+                    familiares: {
+                        include: { user: true }
+                    }
+                },
             });
 
             expect(result).toEqual(mockCreatedPaciente);
@@ -114,7 +118,26 @@ describe('PacientesService', () => {
             expect(database.client.paciente.findUnique).toHaveBeenCalledWith({
                 where: { id: 'uuid-123' },
                 include: {
-                    endereco: true
+                    endereco: true,
+                    cuidadores: {
+                        include: {
+                            cuidador: {
+                                include: {
+                                    user: { select: { id: true, nome: true, email: true, telefone: true } }
+                                }
+                            }
+                        }
+                    },
+                    familiares: {
+                        include: {
+                            user: { select: { id: true, nome: true, cpf: true, telefone: true, email: true } }
+                        }
+                    },
+                    plantoes: {
+                        where: { status: 'APROVADO' },
+                        orderBy: { dataInicio: 'desc' },
+                        include: { relatorioAtividade: true }
+                    }
                 }
             });
             expect(result).toEqual(mockPaciente);
