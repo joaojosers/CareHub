@@ -21,8 +21,6 @@ model User {
   cuidador     CuidadorDetalhes?
   familiares   FamiliarVinculo[]
   endereco     Endereco?
-  pacientes Paciente[] @relation("CuidadorPacientes") // Relação N-N
-
   @@map("users")
 }
 
