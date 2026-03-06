@@ -31,7 +31,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend-react
+      context: ./frontend
       dockerfile: Dockerfile
       args:
         # A URL de acesso PÚBICA para sua API, rodando na mesma máquina com a porta 3000

@@ -33,7 +33,7 @@ Thumbs.db
 *.temp
 .cache/
 
-# Regras para o frontend-react
+# Regras para o frontend
 node_modules/
 dist/
 build/
