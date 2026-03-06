@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./header.css";
 
 export default function Header() {
-  const { user, logout } = useContext(AuthContext);
+  const { usuario, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -17,11 +17,11 @@ export default function Header() {
       <div className="header-left">
         <div className="welcome-container">
           <span className="welcome-text">
-            Bem-vindo, <strong>{user?.email}</strong>
+            Bem-vindo, <strong>{usuario?.email}</strong>
           </span>
 
           <span className="welcome-role">
-            {user?.role}
+            {usuario?.tipo}
           </span>
         </div>
       </div>

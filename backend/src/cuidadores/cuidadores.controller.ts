@@ -1,9 +1,10 @@
-import { Controller, Post, Get, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseGuards, Patch } from '@nestjs/common';
 import { CuidadoresService } from './cuidadores.service';
 import { CreateCuidadorDto } from './dto/create-cuidador.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator'; // <--- O novo import aqui
 import { UserRole } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 
@@ -13,18 +14,19 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@ne
 export class CuidadoresController {
     constructor(private readonly cuidadoresService: CuidadoresService) { }
 
+    @Public()
     @Post()
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(UserRole.ADMIN) // Apenas administradores podem criar novos cuidadores
-    @ApiOperation({ summary: 'Criar um novo cuidador (Admin)' })
-    @ApiResponse({ status: 201, description: 'Cuidador criado com sucesso.' })
-    @ApiResponse({ status: 403, description: 'Acesso negado (Somente Admin).' })
+    @ApiOperation({ summary: 'Auto-cadastro de novo cuidador (Público)' })
+    @ApiResponse({ status: 201, description: 'Cadastro realizado com sucesso. Aguardando aprovação.' })
+    @ApiResponse({ status: 400, description: 'Dados inválidos ou e-mail já cadastrado.' })
     async create(@Body() createCuidadorDto: CreateCuidadorDto) {
+        // O seu Service já deve setar o status como 'PENDENTE' por padrão
         return this.cuidadoresService.create(createCuidadorDto);
     }
 
     @Get()
-    @UseGuards(JwtAuthGuard) // Qualquer usuário logado pode listar cuidadores
+    @UseGuards(JwtAuthGuard) // Só o admin pode listar todos os cuidadores
+    @Roles(UserRole.ADMIN)
     @ApiOperation({ summary: 'Listar todos os cuidadores' })
     @ApiResponse({ status: 200, description: 'Lista de cuidadores retornada com sucesso.' })
     async findAll() {
@@ -39,5 +41,12 @@ export class CuidadoresController {
     @ApiResponse({ status: 404, description: 'Cuidador não encontrado.' })
     async findOne(@Param('id') id: string) {
         return this.cuidadoresService.findOne(id);
+    }
+
+    @Get(':id/pacientes')
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Listar pacientes vinculados a um cuidador específico' })
+    async getPacientes(@Param('id') id: string) {
+        return this.cuidadoresService.findPacientesByCuidador(id);
     }
 }

@@ -412,3 +412,292 @@ textarea:focus {
   background-color: #dc2626 !important; /* vermelho moderno */
   color: #fff !important;
 }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border: 1px solid #f1f5f9;
+}
+
+.stat-card h3 {
+  font-size: 16px;
+  color: #0f172a; /* azul quase preto */
+  font-weight: 500;
+}
+
+.stat-card p {
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 8px;
+  color: #0f172a; /* azul quase preto */
+}
+
+.recent-section {
+  margin-top: 40px;
+}
+
+.recent-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.recent-table th {
+  text-align: left;
+  font-size: 13px;
+  color: #64748b;
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.recent-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+/*
+.recent-table tr:hover {
+  background-color: #f8fafc;
+}
+*/  
+.document-item:hover {
+  border-color: #38bdf8 !important;
+  transition: 0.3s;
+}
+.btn-danger-outline {
+  background: transparent;
+  color: #f87171;
+  border: 1px solid #f87171;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-danger-outline:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+/* ===================================================
+   AJUSTES ESPECÍFICOS PARA O DASHBOARD (NOVO)
+=================================================== */
+
+.admin-container {
+  padding: 20px;
+  color: #fff;
+}
+
+/* Organiza o topo: Título de um lado, Botão do outro */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.admin-header h1 {
+  font-size: 32px;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 16px;
+}
+
+/* Impede o botão de Sair de esticar */
+.btn-logout {
+  background: linear-gradient(90deg, #8b5cf6, #6366f1);
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  width: auto !important; /* 🔥 Garante que não estique */
+}
+
+.btn-logout:hover {
+  opacity: 0.9;
+}
+
+/* Melhorias na Tabela de Pacientes */
+.ui-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px; /* Espaço entre as linhas */
+  margin-top: 20px;
+}
+
+.ui-table th {
+  padding: 12px 15px;
+  color: #94a3b8;
+  text-align: left;
+  font-weight: 500;
+  border-bottom: 1px solid #334155;
+}
+
+.ui-table tbody tr {
+  background: #1e293b;
+  transition: transform 0.2s;
+}
+
+.ui-table tbody tr:hover {
+  transform: scale(1.01);
+  background: #2d3a4f;
+}
+
+.ui-table td {
+  padding: 15px;
+  color: #e2e8f0;
+}
+
+/* Célula do Paciente (Nome e Condição) */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-info strong {
+  color: #fff;
+  font-size: 16px;
+}
+
+.user-info span {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* Botão Abrir Prontuário */
+.btn-view {
+  background: linear-gradient(90deg, #8b5cf6, #6366f1);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Badge de Status no Header */
+.badge-success {
+  background: #064e3b;
+  color: #10b981;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #065f46;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: #94a3b8;
+}
+
+.empty-state-card {
+  background: #1e293b;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  border: 2px dashed #334155;
+  margin-top: 20px;
+}
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ui-table thead th {
+  text-align: left;
+  padding: 15px 20px;
+  color: #94a3b8;
+  font-size: 12px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #1e293b;
+}
+
+.ui-table tbody td {
+  padding: 15px 20px;
+  color: #e2e8f0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.patient-info-cell {
+  display: flex;
+  flex-direction: column;
+   font-size: 12px;
+}
+
+.patient-info-cell strong {
+  color: #fff;
+  font-size: 18px;
+}
+
+.patient-info-cell small {
+  color: #8b5cf6;
+  font-size: 12px;
+}
+
+.btn-view {
+  background: #6366f1;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-view:hover {
+  background: #4f46e5;
+}
+.btn-danger-slim {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+    border: 1px solid #ef4444 !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    text-decoration: none !important; /* Remove o sublinhado do print */
+    border-radius: 4px !important;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-danger-slim:hover {
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+
+.section-content-padding {
+    padding: 0 8px;
+}
+
+.text-highlight {
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+.empty-text {
+    color: #94a3b8;
+    font-size: 14px;
+}
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}

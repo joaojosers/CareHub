@@ -1,5 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import api from "../../services/api";
+import { toast } from "react-hot-toast";
+import { AuthContext } from "../../contexts/AuthContext";
+
+// Importação para o PDF
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 import PageTitle from "../../components/ui/PageTitle";
 import DetailCard from "../../components/ui/DetailCard";
@@ -8,24 +14,20 @@ import DetailGrid from "../../components/ui/DetailGrid";
 import DetailItem from "../../components/ui/DetailItem";
 import StatusBadge from "../../components/ui/StatusBadge";
 
-export default function Relatorios() {
-  const [horas, setHoras] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
-  const [pacientes, setPacientes] = useState([]);
+import "../../styles/ui.css";
 
+export default function Relatorios() {
+  const [plantoes, setPlantoes] = useState([]);
+  const [cuidadores, setCuidadores] = useState([]);
+  const [pacientes, setPacientes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [pacienteFiltro, setPacienteFiltro] = useState("");
   const [cuidadorFiltro, setCuidadorFiltro] = useState("");
-  const [statusFiltro, setStatusFiltro] = useState("");
-
-  const anoAtual = new Date().getFullYear();
+  const [statusFiltro, setStatusFiltro] = useState("PENDENTE");
   const [mes, setMes] = useState("");
-  const [ano, setAno] = useState(anoAtual.toString());
-
-  const mesFiltro = mes ? `${ano}-${mes}` : "";
-
-  // 🔹 Verifica se usuário logado é ADMIN
-  const usuarioLogado = JSON.parse(localStorage.getItem("user"));
-  const isAdmin = usuarioLogado?.role === "ADMIN";
+  const [ano, setAno] = useState(new Date().getFullYear().toString());
+  const { usuario } = useContext(AuthContext);
+  const isAdmin = usuario?.tipo === "ADMIN";
 
   useEffect(() => {
     carregarDados();
@@ -33,256 +35,200 @@ export default function Relatorios() {
 
   const carregarDados = async () => {
     try {
-      const [h, u, p] = await Promise.all([
-        api.get("/hours"),
-        api.get("/users"),
-        api.get("/patients")
+      setLoading(true);
+      const [resCuidadores, resPacientes, resPlantoes] = await Promise.all([
+        api.get("/cuidadores"),
+        api.get("/pacientes"),
+        api.get("/plantoes")
       ]);
-
-      setHoras(h.data);
-      setUsuarios(u.data);
-      setPacientes(p.data);
+      setCuidadores(resCuidadores.data || []);
+      setPacientes(resPacientes.data || []);
+      setPlantoes(resPlantoes.data || []);
     } catch (error) {
-      console.error("Erro ao carregar relatórios");
+      toast.error("Erro ao carregar dados.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 🔹 Atualiza status (Aprovar / Rejeitar)
-  const atualizarStatus = async (id, novoStatus) => {
+  const atualizarStatus = async (plantaoId, novoStatus) => {
     try {
-      await api.patch(`/hours/${id}`, {
-        status: novoStatus
-      });
-
-      carregarDados(); // recarrega lista
+      const url = `/plantoes/${plantaoId}/status`;
+      const payload = { status: novoStatus };
+      await api.patch(url, payload);
+      toast.success(`Plantão ${novoStatus === 'APROVADO' ? 'aprovado' : 'reprovado'}!`);     
+      // Atualiza a lista na tela
+      carregarDados(); 
     } catch (error) {
-      console.error("Erro ao atualizar status");
-      alert("Erro ao atualizar status do relatório");
+      console.error("Erro ao atualizar status:", error);
+      const msg = error.response?.data?.message || "Erro ao processar solicitação.";
+      toast.error(msg);
     }
   };
 
-  const getCuidadorNome = (id) =>
-    usuarios.find(u => u.id === id)?.name || "Desconhecido";
 
-  const getPacienteNome = (id) =>
-    pacientes.find(p => p.id === id)?.name || "Desconhecido";
+  // Funções de Exportação
+  const exportarCSV = () => {
+    // Definimos as colunas
+    const colunas = ["Paciente", "Cuidador", "Data", "Status", "Descricao", "Medicacoes", "PA", "Observacoes"];
+    
+    // Criamos o cabeçalho
+    const cabecalho = colunas.join(";") + "\n";
 
-  const relatoriosFiltrados = horas
-    .filter(h => {
-      const pacienteOk = !pacienteFiltro || h.patientId === pacienteFiltro;
-      const cuidadorOk = !cuidadorFiltro || h.caregiverId === cuidadorFiltro;
-      const statusOk = !statusFiltro || h.status === statusFiltro;
+    const linhas = filtrados.map(p => {
+      const c = cuidadores.find(item => item.id === p.cuidadorId);
+      
+      // Função auxiliar para limpar textos que quebram o CSV (remove quebras de linha e pontos e vírgula)
+      const limpar = (texto) => texto ? String(texto).replace(/[\n\r]+/g, ' ').replace(/;/g, ',') : "vazio";
 
-      let mesOk = true;
-      if (mesFiltro) {
-        const d = new Date(h.date);
-        const anoMes =
-          d.getFullYear() +
-          "-" +
-          String(d.getMonth() + 1).padStart(2, "0");
+      const dados = [
+        limpar(p.paciente?.nome || "N/A"),
+        limpar(p.cuidador?.user?.nome || c?.user?.nome || "N/A"),
+        new Date(p.dataInicio).toLocaleDateString('pt-BR'),
+        p.status,
+        limpar(p.relatorioAtividade?.descricao),
+        limpar(p.relatorioAtividade?.medicacoes),
+        limpar(p.relatorioAtividade?.pressaoArterial),
+        limpar(p.relatorioAtividade?.observacoes)
+      ];
 
-        mesOk = anoMes === mesFiltro;
-      }
+      return dados.join(";");
+    }).join("\n");
 
-      return pacienteOk && cuidadorOk && statusOk && mesOk;
-    })
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    // \ufeff é o BOM (Byte Order Mark) para o Excel reconhecer acentos em UTF-8
+    const blob = new Blob(["\ufeff" + cabecalho + linhas], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `relatorio_carehub_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportarPDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4'); // 'l' para paisagem (landscape) para caber mais colunas
+
+    doc.setFontSize(18);
+    doc.text("Relatório de Plantões - CareHub", 14, 20);
+    
+    const tableData = filtrados.map(p => {
+      const c = cuidadores.find(item => item.id === p.cuidadorId);
+      return [
+        p.paciente?.nome || "N/A",
+        p.cuidador?.user?.nome || c?.user?.nome || "N/A",
+        new Date(p.dataInicio).toLocaleDateString('pt-BR'),
+        p.status,
+        p.relatorioAtividade?.descricao || "Sem desc.",
+        p.relatorioAtividade?.medicacoes || "-",
+        p.relatorioAtividade?.pressaoArterial || "-",
+        p.relatorioAtividade?.observacoes
+      ];
+    });
+
+    // Chamada correta do autoTable
+    autoTable(doc, {
+      head: [['Paciente', 'Cuidador', 'Data', 'Status', 'Descrição', 'Medicações', 'P.A.', 'Observações']],
+      body: tableData,
+      startY: 30,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [37, 99, 235] }, // Cor azul do seu ui.css
+      alternateRowStyles: { fillColor: [241, 245, 249] },
+    });
+
+    doc.save(`relatorio_carehub_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const filtrados = plantoes.filter(p => {
+    const matchPaciente = !pacienteFiltro || p.pacienteId === pacienteFiltro;
+    const matchCuidador = !cuidadorFiltro || p.cuidadorId === cuidadorFiltro;
+    const matchStatus = !statusFiltro || p.status === statusFiltro;
+    return matchPaciente && matchCuidador && matchStatus;
+  }).sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio));
 
   return (
     <>
-      <PageTitle title="Relatórios de Atendimento" />
+      <PageTitle title="Gestão e Relatórios" />
 
-      <DetailCard>
-
-        {/* FILTROS */}
-        <DetailSection title="Filtros">
+      <DetailCard className="detail-card">
+        <DetailSection title="Filtros de Busca">
           <div className="filters-row">
-
-            <select
-              value={pacienteFiltro}
-              onChange={(e) => setPacienteFiltro(e.target.value)}
-            >
+            <select value={pacienteFiltro} onChange={(e) => setPacienteFiltro(e.target.value)}>
               <option value="">Todos Pacientes</option>
-              {pacientes.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
+              {pacientes.map(pac => <option key={pac.id} value={pac.id}>{pac.nome}</option>)}
+            </select>
+
+            <select value={cuidadorFiltro} onChange={(e) => setCuidadorFiltro(e.target.value)}>
+              <option value="">Todos Cuidadores</option>
+              {cuidadores.map(c => (
+                <option key={c.id} value={c.id}>{c.user?.nome || c.nome}</option>
               ))}
             </select>
 
-            <select
-              value={cuidadorFiltro}
-              onChange={(e) => setCuidadorFiltro(e.target.value)}
-            >
-              <option value="">Todos Cuidadores</option>
-              {usuarios
-                .filter(u => u.role === "CUIDADOR")
-                .map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-            </select>
-
-            <select
-              value={statusFiltro}
-              onChange={(e) => setStatusFiltro(e.target.value)}
-            >
+            <select value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}>
               <option value="">Todos Status</option>
-              <option value="PENDENTE">Pendente</option>
-              <option value="APROVADO">Aprovado</option>
-              <option value="REJEITADO">Rejeitado</option>
+              <option value="PENDENTE">Pendentes</option>
+              <option value="APROVADO">Aprovados</option>
+              <option value="REJEITADO">Rejeitados</option>
             </select>
-
-            <select value={mes} onChange={(e) => setMes(e.target.value)}>
-              <option value="">Todos Meses</option>
-              <option value="01">Janeiro</option>
-              <option value="02">Fevereiro</option>
-              <option value="03">Março</option>
-              <option value="04">Abril</option>
-              <option value="05">Maio</option>
-              <option value="06">Junho</option>
-              <option value="07">Julho</option>
-              <option value="08">Agosto</option>
-              <option value="09">Setembro</option>
-              <option value="10">Outubro</option>
-              <option value="11">Novembro</option>
-              <option value="12">Dezembro</option>
-            </select>
-
-            <select value={ano} onChange={(e) => setAno(e.target.value)}>
-              <option value="">Todos Anos</option>
-              <option value={anoAtual}>{anoAtual}</option>
-              <option value={anoAtual - 1}>{anoAtual - 1}</option>
-              <option value={anoAtual - 2}>{anoAtual - 2}</option>
-            </select>
-
           </div>
         </DetailSection>
 
-        {/* EXPORTAÇÃO */}
-        <DetailSection title="Exportação">
-          <div className="export-buttons">
-            <button onClick={() => exportarCSV(relatoriosFiltrados)}>
-              Exportar CSV
-            </button>
-
-            <button onClick={() => exportarPDF(relatoriosFiltrados)}>
-              Exportar PDF
-            </button>
+        <DetailSection 
+          title={`Resultados (${filtrados.length})`}
+          renderActions={() => (
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-view" onClick={exportarCSV}>CSV</button>
+              <button className="btn-view" onClick={exportarPDF} style={{ background: '#f59e0b' }}>PDF</button>
+            </div>
+          )}
+        >
+          {/* Header de Ações no topo da lista */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '20px' }}>
+             <button className="btn-view" onClick={exportarCSV}>Exportar CSV</button>
+             <button className="btn-view" onClick={exportarPDF} style={{ background: '#ef4444' }}>Gerar PDF</button>
           </div>
-        </DetailSection>
 
-        {/* LISTAGEM */}
-        <DetailSection title="Lista de Relatórios">
-          {relatoriosFiltrados.length === 0 ? (
-            <p>Nenhum relatório encontrado</p>
-          ) : (
-            relatoriosFiltrados.map(h => (
-              <div key={h.id} className="report-card">
+          {filtrados.map(p => {
+            const isPendente = p.status === 'PENDENTE';
+            const cuidadorInfo = cuidadores.find(c => c.id === p.cuidadorId);
+            const nomeCuidador = p.cuidador?.user?.nome || cuidadorInfo?.user?.nome || "Cuidador";
+            const nomePaciente = p.paciente?.nome || pacientes.find(pac => pac.id === p.pacienteId)?.nome || "Paciente";
 
+            const formatarHora = (data) => new Date(data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            return (
+              <div key={p.id} className="report-card" style={isPendente ? { borderLeft: '4px solid #f59e0b', background: 'rgba(245, 158, 11, 0.05)' } : {}}>
                 <DetailGrid>
-                  <DetailItem label="Paciente" value={getPacienteNome(h.patientId)} />
-                  <DetailItem label="Cuidador" value={getCuidadorNome(h.caregiverId)} />
-                  <DetailItem label="Data" value={h.date} />
-                  <DetailItem label="Horário" value={`${h.startTime} - ${h.endTime}`} />
-                  <DetailItem label="Total" value={`${h.totalHours}h`} />
-                  <DetailItem label="Descrição" value={h.report?.descricao} />
+                  <DetailItem label="Paciente" value={nomePaciente} />
+                  <DetailItem label="Cuidador" value={nomeCuidador} />
+                  <DetailItem label="Data" value={new Date(p.dataInicio).toLocaleDateString('pt-BR')} />
+                  <DetailItem label="Horário" value={`${formatarHora(p.dataInicio)} - ${formatarHora(p.dataFim)}`} />
                 </DetailGrid>
 
-               <div
-                  style={{
-                    marginTop: 12,
-                    display: "flex",
-                    gap: 8,
-                    alignItems: "center"
-                  }}
-                >
-                  <StatusBadge status={h.status} />
-
-                  {isAdmin && h.status === "PENDENTE" && (
-                    <>
-                      <button
-                        onClick={() => atualizarStatus(h.id, "APROVADO")}
-                        className="action-badge action-aprovar"
-                      >
-                        Aprovar
-                      </button>
-
-                      <button
-                        onClick={() => atualizarStatus(h.id, "REJEITADO")}
-                        className="action-badge action-rejeitar"
-                      >
-                        Rejeitar
-                      </button>
-                    </>
-                  )}
+                <div className="form-section" style={{ marginTop: '20px', padding: '15px', background: '#0f172a', borderRadius: '8px' }}>
+                  <span className="detail-label" style={{ fontWeight: 'bold', color: '#94a3b8' }}>RELATÓRIO DE ATIVIDADES</span>
+                  <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <p className="detail-value"><strong>Descrição:</strong> {p.relatorioAtividade?.descricao || "Sem descrição."}</p>
+                    <p className="detail-value"><strong>Medicações:</strong> {p.relatorioAtividade?.medicacoes || "vazio."}</p>
+                    <p className="detail-value"><strong>Pressão Arterial:</strong> {p.relatorioAtividade?.pressaoArterial || "vazio."}</p>
+                    <p className="detail-value"><strong>Observações:</strong> {p.relatorioAtividade?.observacoes || "vazio."}</p>
+                  </div>
                 </div>
 
-            </div>
-            ))
-          )}
+                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <StatusBadge status={p.status} />
+                  {isAdmin && isPendente && (
+                    <div className="form-actions">
+                      <button className="btn-danger" onClick={() => atualizarStatus(p.id, "REJEITADO")}>Rejeitar</button>
+                      <button className="btn-primary" onClick={() => atualizarStatus(p.id, "APROVADO")}>Aprovar Plantão</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </DetailSection>
-
       </DetailCard>
     </>
   );
-}
-
-/* =============================
-   FUNÇÕES EXPORTAÇÃO
-============================= */
-
-function exportarCSV(relatorios) {
-  if (relatorios.length === 0) {
-    alert("Nenhum relatório para exportar");
-    return;
-  }
-
-  const linhas = [
-    ["Paciente", "Cuidador", "Data", "Inicio", "Fim", "Total Horas", "Descricao", "Status"]
-  ];
-
-  relatorios.forEach(h => {
-    linhas.push([
-      h.patientId,
-      h.caregiverId,
-      h.date,
-      h.startTime,
-      h.endTime,
-      h.totalHours,
-      h.report?.descricao || "",
-      h.status
-    ]);
-  });
-
-  const csvContent =
-    "data:text/csv;charset=utf-8," +
-    linhas.map(e => e.join(";")).join("\n");
-
-  const link = document.createElement("a");
-  link.setAttribute("href", encodeURI(csvContent));
-  link.setAttribute("download", "relatorio_atendimentos.csv");
-  document.body.appendChild(link);
-  link.click();
-}
-
-function exportarPDF(relatorios) {
-  if (relatorios.length === 0) {
-    alert("Nenhum relatório para exportar");
-    return;
-  }
-
-  const janela = window.open("", "_blank");
-  janela.document.write("<h2>Relatório de Atendimentos</h2>");
-  janela.document.write("<hr/>");
-
-  relatorios.forEach(h => {
-    janela.document.write(`<p><strong>Data:</strong> ${h.date}</p>`);
-    janela.document.write(`<p><strong>Total:</strong> ${h.totalHours}h</p>`);
-    janela.document.write("<hr/>");
-  });
-
-  janela.document.close();
-  janela.print();
 }

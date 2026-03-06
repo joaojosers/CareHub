@@ -125,34 +125,56 @@ export class PlantoesService {
         });
     }
 
-    async aprovarPlantao(id: string) {
-        const plantaoExiste = await this.database.client.plantao.findUnique({
+    async updateStatus(id: string, status: PlantaoStatus) {
+        const plantao = await this.database.client.plantao.findUnique({
+            where: { id }
+        });
+
+        if (!plantao) throw new NotFoundException('Plantão não encontrado');
+
+        return this.database.client.plantao.update({
             where: { id },
-            include: { cuidador: true } // Importante para garantir que os dados existem
+            data: { status },
+            include: { relatorioAtividade: true }
+        });
+    }
+
+    async aprovarPlantao(id: string) {
+        // 1. Verificar se o plantão existe antes de tentar o update
+        const plantaoExiste = await this.database.client.plantao.findUnique({
+            where: { id }
         });
 
         if (!plantaoExiste) {
             throw new NotFoundException(`Plantão ${id} não encontrado`);
         }
 
-        // 1. Atualiza o status
+        // 2. Atualiza o status usando o nome correto: 'database'
         const plantao = await this.database.client.plantao.update({
             where: { id },
-            data: { status: PlantaoStatus.APROVADO },
+            data: { status: PlantaoStatus.APROVADO }, // Use o Enum para evitar strings soltas
         });
 
-        // 2. Criação do pagamento (Removido cuidadorId para respeitar o DTO)
+        // 3. Criação automática do pagamento
         try {
             await this.pagamentosService.create({
                 plantaoId: id,
                 metodoPagamento: 'PIX', 
-                // Se o erro persistir em outros campos, verifique o CreatePagamentoDto
             });
             
-            return { message: 'Plantão aprovado e faturamento gerado.', plantao };
+            return { 
+                message: 'Plantão aprovado e faturamento gerado.', 
+                plantao 
+            };
         } catch (error) {
-            console.error('ERRO NO PAGAMENTO:', error.message);
-            return { message: 'Plantão aprovado, mas erro no faturamento.', plantao };
+            // Log do erro para o desenvolvedor
+            console.error('Erro no faturamento automático:', error.message);
+            
+            // Retorna um status de sucesso parcial, pois o plantão FOI aprovado
+            return { 
+                message: 'Plantão aprovado. O faturamento deve ser revisado manualmente.', 
+                plantao 
+            };
         }
     }
 }

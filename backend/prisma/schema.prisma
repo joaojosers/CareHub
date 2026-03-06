@@ -21,6 +21,7 @@ model User {
   cuidador     CuidadorDetalhes?
   familiares   FamiliarVinculo[]
   endereco     Endereco?
+  pacientes Paciente[] @relation("CuidadorPacientes") // Relação N-N
 
   @@map("users")
 }
@@ -42,6 +43,7 @@ model CuidadorDetalhes {
   documentos     DocumentoCuidador[]
   plantoes       Plantao[]
   pagamentos     Pagamento[]
+  pacientes      CuidadorPacienteVinculo[]
 
   @@map("cuidador_detalhes")
 }
@@ -72,6 +74,7 @@ model Paciente {
   familiares     FamiliarVinculo[]
   plantoes       Plantao[]
   endereco       Endereco?
+  cuidadores     CuidadorPacienteVinculo[]
 
   @@map("pacientes")
 }
@@ -110,6 +113,20 @@ model FamiliarVinculo {
 
   @@unique([userId, pacienteId])
   @@map("familiar_vinculos")
+}
+
+model CuidadorPacienteVinculo {
+  id                String   @id @default(uuid())
+  pacienteId        String
+  cuidadorId        String
+  valorHoraAcordado Decimal  @db.Decimal(10, 2)
+  dataVinculo       DateTime @default(now())
+
+  paciente          Paciente          @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  cuidador          CuidadorDetalhes  @relation(fields: [cuidadorId], references: [id], onDelete: Cascade)
+
+  @@unique([pacienteId, cuidadorId])
+  @@map("cuidador_paciente_vinculos")
 }
 
 model Plantao {

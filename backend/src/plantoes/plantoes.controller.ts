@@ -16,7 +16,7 @@ export class PlantoesController {
 
     @Post()
     @UseGuards(RolesGuard)
-    @Roles(UserRole.ADMIN, UserRole.FAMILIAR)
+    @Roles(UserRole.ADMIN, UserRole.CUIDADOR)
     @ApiOperation({ summary: 'Criar/Agendar novo plantão' })
     @ApiResponse({ status: 201, description: 'Plantão criado com sucesso.' })
     @ApiResponse({ status: 403, description: 'Permissão negada (Somente Admin/Familiar).' })
@@ -25,7 +25,7 @@ export class PlantoesController {
     }
 
     @Get()
-    @UseGuards(RolesGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(UserRole.ADMIN)
     @ApiOperation({ summary: 'Listar todos os plantões (Básico)' })
     async findAll() {
@@ -52,6 +52,6 @@ export class PlantoesController {
         @Param('id') id: string,
         @Body('status') status: PlantaoStatus
     ) {
-        return this.plantoesService.updateStatus(id, status);
+        return this.plantoesService.aprovarPlantao(id);
     }
 }
