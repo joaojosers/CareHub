@@ -35,7 +35,7 @@ services:
       dockerfile: Dockerfile
       args:
         # A URL de acesso PÚBICA para sua API, rodando na mesma máquina com a porta 3000
-        - VITE_API_URL=http://138.249.110.133:3000
+        - VITE_API_URL=http://136.248.110.133:3000
     container_name: carehub-frontend
     restart: always
     ports:
