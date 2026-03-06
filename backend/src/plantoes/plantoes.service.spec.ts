@@ -3,6 +3,7 @@ import { PlantoesService } from './plantoes.service';
 import { DatabaseService } from '../database/database.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PlantaoStatus } from '@prisma/client';
+import { PagamentosService } from '../pagamentos/pagamentos.service';
 
 // ─── Mock DatabaseService ────────────────────────────────────────────────────
 
@@ -53,6 +54,7 @@ describe('PlantoesService', () => {
             providers: [
                 PlantoesService,
                 { provide: DatabaseService, useValue: mockDb },
+                { provide: PagamentosService, useValue: { create: jest.fn() } },
             ],
         }).compile();
 
@@ -180,7 +182,7 @@ describe('PlantoesService', () => {
             expect(mockDb.client.plantao.update).toHaveBeenCalledWith(
                 expect.objectContaining({ data: { status: PlantaoStatus.APROVADO } }),
             );
-            expect(result.status).toBe(PlantaoStatus.APROVADO);
+            expect((result as any).plantao.status).toBe(PlantaoStatus.APROVADO);
         });
 
         it('should update plantao status to REJEITADO', async () => {
@@ -191,7 +193,7 @@ describe('PlantoesService', () => {
 
             const result = await service.updateStatus('plantao-uuid', PlantaoStatus.REJEITADO);
 
-            expect(result.status).toBe(PlantaoStatus.REJEITADO);
+            expect((result as any).status).toBe(PlantaoStatus.REJEITADO);
         });
     });
 

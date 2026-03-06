@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, BadRequestException } from '@nestjs/common';
 import { UserRole, UserStatus } from '@prisma/client';
@@ -72,26 +73,31 @@ describe('AuthService', () => {
             expect(result).not.toHaveProperty('senha'); // password MUST NOT be returned
         });
 
-        it('should return null for a PENDENTE user even with correct password', async () => {
-            const user = makeUser({ status: UserStatus.PENDENTE });
-            mockUsersService.findByEmail.mockResolvedValue(user);
-            bcrypt.compare.mockResolvedValue(true);
+        it('should throw UnauthorizedException for a PENDENTE user even with correct password', async () => {
+            mockUsersService.findByEmail.mockResolvedValue({
+                id: '2',
+                email: 'test@test.com',
+                senha: 'hashed_password',
+                status: UserStatus.PENDENTE,
+            });
 
-            const result = await service.validateUser('joao@test.com', 'password123');
+            (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-            expect(result).toBeNull();
+            await expect(service.validateUser('test@test.com', 'test123')).rejects.toThrow(UnauthorizedException);
         });
 
-        it('should return null for a REJEITADO user', async () => {
-            const user = makeUser({ status: UserStatus.REJEITADO });
-            mockUsersService.findByEmail.mockResolvedValue(user);
-            bcrypt.compare.mockResolvedValue(true);
+        it('should throw UnauthorizedException for a REJEITADO user', async () => {
+            mockUsersService.findByEmail.mockResolvedValue({
+                id: '3',
+                email: 'test@test.com',
+                senha: 'hashed_password',
+                status: UserStatus.REJEITADO,
+            });
 
-            const result = await service.validateUser('joao@test.com', 'password123');
+            (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-            expect(result).toBeNull();
+            await expect(service.validateUser('test@test.com', 'test123')).rejects.toThrow(UnauthorizedException);
         });
-
         it('should return null when the password is wrong', async () => {
             const user = makeUser();
             mockUsersService.findByEmail.mockResolvedValue(user);

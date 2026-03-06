@@ -8,10 +8,10 @@ import { PagamentosService } from '../pagamentos/pagamentos.service';
 export class PlantoesService {
     // 1. Mantenha os nomes consistentes (usei 'database' para bater com o restante do seu código)
     constructor(
-        private database: DatabaseService, 
+        private database: DatabaseService,
         private pagamentosService: PagamentosService
     ) { }
-    
+
     async create(dto: CreatePlantaoDto) {
         const inicio = new Date(dto.dataInicio);
         const fim = new Date(dto.dataFim);
@@ -145,16 +145,34 @@ export class PlantoesService {
         try {
             await this.pagamentosService.create({
                 plantaoId: id,
-                metodoPagamento: 'PIX', 
+                metodoPagamento: 'PIX',
                 // Se o erro persistir em outros campos, verifique o CreatePagamentoDto
             });
-            
+
             return { message: 'Plantão aprovado e faturamento gerado.', plantao };
         } catch (error) {
             console.error('ERRO NO PAGAMENTO:', error.message);
             return { message: 'Plantão aprovado, mas erro no faturamento.', plantao };
         }
     }
+    async updateStatus(id: string, status: PlantaoStatus) {
+        if (status === PlantaoStatus.APROVADO) {
+            return this.aprovarPlantao(id);
+        }
+
+        const plantao = await this.database.client.plantao.update({
+            where: { id },
+            data: { status },
+            include: {
+                paciente: true,
+                cuidador: { include: { user: true } },
+            }
+        });
+
+        if (!plantao) {
+            throw new NotFoundException(`Plantão com ID ${id} não encontrado`);
+        }
+
+        return plantao;
+    }
 }
-
-

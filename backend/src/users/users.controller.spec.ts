@@ -46,26 +46,27 @@ describe('UsersController', () => {
   describe('findAll', () => {
     it('deve retornar uma lista de usuários sem filtro de status', async () => {
       // Preparamos o que o dublê vai devolver quando for chamado
-      const resultMock = [{ id: '1', name: 'Carlos', status: UserStatus.APROVADO }];
-      mockUsersService.findAll.mockResolvedValue(resultMock);
+      const resultMock = [{ id: '1', nome: 'Teste', status: UserStatus.APROVADO }];
+      // Preparamos o dublê para retornar resultMock quando for chamado
+      (service.findAll as jest.Mock).mockResolvedValue(resultMock);
 
       // Executamos o método do controller (sem passar parâmetro)
       const response = await controller.findAll();
 
       // Verificamos se o dublê foi chamado com os argumentos certos (undefined)
-      expect(service.findAll).toHaveBeenCalledWith(undefined);
+      expect(service.findAll).toHaveBeenCalledWith(undefined, undefined);
       // Verificamos se o controller devolveu exatamente o que o serviço entregou
       expect(response).toEqual(resultMock);
     });
 
     it('deve retornar uma lista filtrada quando o status for passado', async () => {
-      const resultMock = [{ id: '2', name: 'Ana', status: UserStatus.PENDENTE }];
-      mockUsersService.findAll.mockResolvedValue(resultMock);
+      const resultMock = [{ id: '2', nome: 'Teste 2', status: UserStatus.PENDENTE }];
+      (service.findAll as jest.Mock).mockResolvedValue(resultMock);
 
       // Executamos passando o parâmetro PENDENTE
       const response = await controller.findAll(UserStatus.PENDENTE);
 
-      expect(service.findAll).toHaveBeenCalledWith(UserStatus.PENDENTE);
+      expect(service.findAll).toHaveBeenCalledWith(UserStatus.PENDENTE, undefined);
       expect(response).toEqual(resultMock);
     });
   });

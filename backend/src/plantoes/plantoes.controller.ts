@@ -52,6 +52,6 @@ export class PlantoesController {
         @Param('id') id: string,
         @Body('status') status: PlantaoStatus
     ) {
-        return this.plantoesService.aprovarPlantao(id);
+        return this.plantoesService.updateStatus(id, status);
     }
 }

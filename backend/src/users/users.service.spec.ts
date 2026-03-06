@@ -76,7 +76,7 @@ describe('UsersService', () => {
             // Simulamos o comportamento do bcrypt para ele não rodar de verdade e atrasar o teste
             (bcrypt.genSalt as jest.Mock).mockResolvedValue('fakeSalt');
             (bcrypt.hash as jest.Mock).mockResolvedValue('senha-criptografada');
-            
+
             database.client.user.create.mockResolvedValue({ ...mockUser, senha: 'senha-criptografada' });
 
             const createData = {
@@ -112,8 +112,18 @@ describe('UsersService', () => {
 
             // Agora o expect reflete exatamente o que está no seu código
             expect(database.client.user.findMany).toHaveBeenCalledWith({
-                where: undefined,
+                where: { status: undefined, tipo: undefined },
                 orderBy: { dataCadastro: 'desc' },
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true,
+                    cpf: true,
+                    tipo: true,
+                    status: true,
+                    telefone: true,
+                    dataCadastro: true,
+                },
             });
             expect(result).toEqual([mockUser]);
         });
@@ -124,8 +134,18 @@ describe('UsersService', () => {
             const result = await service.findAll(UserStatus.APROVADO);
 
             expect(database.client.user.findMany).toHaveBeenCalledWith({
-                where: { status: UserStatus.APROVADO },
+                where: { status: UserStatus.APROVADO, tipo: undefined },
                 orderBy: { dataCadastro: 'desc' },
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true,
+                    cpf: true,
+                    tipo: true,
+                    status: true,
+                    telefone: true,
+                    dataCadastro: true,
+                },
             });
             expect(result).toEqual([mockUser]);
         });
