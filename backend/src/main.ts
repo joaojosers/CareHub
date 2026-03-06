@@ -10,7 +10,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:5173',       // Frontend local (Vite dev server)
       'http://localhost:3001',       // Alternativa local
-      'http://136.248.110.133:3000', // OCI production IP
+      'http://136.248.110.133',      // OCI production IP (Frontend no NGINX porta 80)
+      'http://136.248.110.133:3000', // OCI production IP alternativo
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
