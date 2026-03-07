@@ -31,4 +31,4 @@ ENV DATABASE_URL=postgresql://careuser:carepassword@db:5432/carehub_db?schema=pu
 USER carehub
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
