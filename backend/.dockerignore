@@ -1,8 +1,8 @@
 # Dependencies — reinstalled inside container
 node_modules
 
-# TypeScript source — only dist/ is needed in production
-src
+# TypeScript source — MUST NOT be ignored in builder stage
+# src
 
 # Test files — not needed in production image
 test
