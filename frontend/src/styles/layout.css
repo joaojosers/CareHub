@@ -1,0 +1,149 @@
+/* ============================= */
+/* LAYOUT BASE */
+/* ============================= */
+
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ============================= */
+/* SIDEBAR */
+/* ============================= */
+
+.sidebar {
+  width: 250px;
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+  color: white;
+  padding: 25px 20px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-logo {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 40px;
+  letter-spacing: 1px;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar a {
+  text-decoration: none;
+  color: #cbd5e1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.sidebar a:hover {
+  background-color: rgba(255,255,255,0.08);
+  color: white;
+}
+
+.sidebar a.active {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  color: white;
+}
+
+/* ============================= */
+/* CONTENT AREA */
+/* ============================= */
+
+.layout-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================= */
+/* HEADER */
+/* ============================= */
+
+.header {
+  height: 60px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Botão logout agora premium */
+.logout-btn {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s ease;
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+/* ============================= */
+/* MAIN CONTENT */
+/* ============================= */
+
+.main-content {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+/* Wrapper opcional para centralizar páginas */
+.page-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+/* ============================= */
+/* STATUS TABS */
+/* ============================= */
+
+.status-tabs {
+  display: flex;
+  gap: 12px;
+  margin: 25px 0 35px 0;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: 0.3s ease;
+}
+
+.tab:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+/* Aba ativa */
+.tab.active {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  color: white;
+  border: none;
+  box-shadow: 0 0 15px rgba(99,102,241,0.4);
+}
+

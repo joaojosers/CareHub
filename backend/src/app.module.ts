@@ -6,6 +6,11 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CuidadoresModule } from './cuidadores/cuidadores.module';
+import { FamiliaresModule } from './familiares/familiares.module';
+import { PacientesModule } from './pacientes/pacientes.module';
+import { PlantoesModule } from './plantoes/plantoes.module';
+import { PagamentosModule } from './pagamentos/pagamentos.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -16,6 +21,11 @@ import { CuidadoresModule } from './cuidadores/cuidadores.module';
     AuthModule,
     UsersModule,
     CuidadoresModule,
+    FamiliaresModule,
+    PacientesModule,
+    PlantoesModule,
+    PagamentosModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

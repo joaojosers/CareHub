@@ -1,5 +1,11 @@
 # CareHub - Sistema de Gestão de Cuidadores e Pacientes
 
+![CI](https://github.com/joaojosers/CareHub/actions/workflows/ci.yml/badge.svg?branch=dev)
+![Tests](https://img.shields.io/badge/tests-39%20passing-brightgreen)
+![Node](https://img.shields.io/badge/node-22.x-green)
+![NestJS](https://img.shields.io/badge/NestJS-11-red)
+![Prisma](https://img.shields.io/badge/Prisma-7-blue)
+
 ## 📋 Visão Geral
 
 CareHub é uma aplicação web moderna desenvolvida para PMEs que prestam serviços de acompanhamento e cuidado de pacientes. O sistema substitui processos manuais realizados em planilhas Excel e grupos de WhatsApp por uma solução integrada e profissional.

@@ -1,16 +1,47 @@
+version: '3.8'
+
 services:
   db:
-    image: postgres:17.5
+    image: postgres:17-alpine
     container_name: carehub-db
     restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: careuser
       POSTGRES_PASSWORD: carepassword
       POSTGRES_DB: carehub_db
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "5433:5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: carehub-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://careuser:carepassword@db:5432/carehub_db?schema=public
+      JWT_SECRET: carehub_super_secret_key_2026
+      NODE_ENV: production
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # A URL de acesso PÚBICA para sua API, rodando na mesma máquina com a porta 3000
+        - VITE_API_URL=http://136.248.110.133:3000
+    container_name: carehub-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

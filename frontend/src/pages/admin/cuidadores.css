@@ -1,0 +1,140 @@
+.cuidadores-page {
+  padding: 24px;
+}
+
+.page-title {
+  font-size: 28px;
+  margin-bottom: 25px;
+  color: #f1f5f9;
+}
+
+/* Input busca */
+
+.input-busca {
+  width: 320px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  color: white;
+  margin-bottom: 25px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.input-busca:focus {
+  border: 1px solid #6366f1;
+  box-shadow: 0 0 10px rgba(99,102,241,0.4);
+}
+
+/* Tabs */
+.status-tabs {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 35px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tab {
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s ease;
+
+  width: auto;        /* 🔥 ESSENCIAL */
+  min-width: 110px;   /* opcional */
+  text-align: center;
+}
+
+.tab:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.tab.active {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  color: white;
+  border: none;
+  box-shadow: 0 0 15px rgba(99,102,241,0.4);
+}
+
+/* Card */
+
+.cuidador-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(6px);
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: 0.3s;
+}
+
+.cuidador-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+.cuidador-nome {
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 16px;
+}
+
+.cuidador-nome:hover {
+  text-decoration: underline;
+}
+
+.cuidador-email {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* Botões */
+
+.acoes {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-aprovar {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-aprovar:hover {
+  transform: scale(1.05);
+}
+
+.btn-rejeitar {
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-rejeitar:hover {
+  transform: scale(1.05);
+}
+
+.info-text {
+  color: #94a3b8;
+  margin-top: 20px;
+}

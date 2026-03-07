@@ -6,6 +6,189 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id           String            @id @default(uuid())
+  tipo         UserRole
+  nome         String
+  email        String            @unique
+  senha        String
+  telefone     String?
+  cpf          String            @unique
+  status       UserStatus        @default(PENDENTE)
+  dataCadastro DateTime          @default(now())
+  
+  // Relations
+  cuidador     CuidadorDetalhes?
+  familiares   FamiliarVinculo[]
+  endereco     Endereco?
+  @@map("users")
+}
+
+model CuidadorDetalhes {
+  id             String      @id @default(uuid())
+  userId         String      @unique
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Legacy JSON fields (to be deprecated eventually)
+  documentosJson Json?       @map("documentos")
+  dadosBancarios Json?
+  
+  mercadoPago    String?
+  especialidades String[]
+  valorHora      Decimal     @default(20) @db.Decimal(10, 2)
+  
+  // New normalized relations
+  documentos     DocumentoCuidador[]
+  plantoes       Plantao[]
+  pagamentos     Pagamento[]
+  pacientes      CuidadorPacienteVinculo[]
+
+  @@map("cuidador_detalhes")
+}
+
+model DocumentoCuidador {
+  id              String           @id @default(uuid())
+  cuidadorId      String
+  tipo            String           // 'RG', 'CPF', 'CERTIFICADO', etc.
+  url             String
+  status          UserStatus       @default(PENDENTE)
+  dataSubmissao   DateTime         @default(now())
+  conferidoEm     DateTime?
+  conferidoPor    String?          // Administrador que aprovou/rejeitou
+  
+  cuidador        CuidadorDetalhes @relation(fields: [cuidadorId], references: [id], onDelete: Cascade)
+
+  @@map("documentos_cuidador")
+}
+
+model Paciente {
+  id             String            @id @default(uuid())
+  nome           String
+  dataNascimento DateTime
+  necessidades   String?           @db.Text
+  status         PacienteStatus    @default(ATIVO)
+  dataCadastro   DateTime          @default(now())
+  
+  familiares     FamiliarVinculo[]
+  plantoes       Plantao[]
+  endereco       Endereco?
+  cuidadores     CuidadorPacienteVinculo[]
+
+  @@map("pacientes")
+}
+
+model Endereco {
+  id          String   @id @default(uuid())
+  logradouro  String
+  numero      String
+  complemento String?
+  bairro      String
+  cidade      String
+  estado      String
+  cep         String   @db.Char(8)
+  referencia  String?
+  criadoEm    DateTime @default(now())
+  
+  // Relations
+  userId      String?  @unique
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  pacienteId  String?  @unique
+  paciente    Paciente? @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@map("enderecos")
+}
+
+model FamiliarVinculo {
+  id                      String   @id @default(uuid())
+  userId                  String
+  pacienteId              String
+  parentesco              String
+  isResponsavelFinanceiro Boolean  @default(false)
+  
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paciente                Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pacienteId])
+  @@map("familiar_vinculos")
+}
+
+model CuidadorPacienteVinculo {
+  id                String   @id @default(uuid())
+  pacienteId        String
+  cuidadorId        String
+  valorHoraAcordado Decimal  @db.Decimal(10, 2)
+  dataVinculo       DateTime @default(now())
+
+  paciente          Paciente          @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  cuidador          CuidadorDetalhes  @relation(fields: [cuidadorId], references: [id], onDelete: Cascade)
+
+  @@unique([pacienteId, cuidadorId])
+  @@map("cuidador_paciente_vinculos")
+}
+
+model Plantao {
+  id                String            @id @default(uuid())
+  cuidadorId        String?
+  pacienteId        String
+  dataInicio        DateTime
+  dataFim           DateTime
+  horasTrabalhadas  Float
+  status            PlantaoStatus     @default(PENDENTE)
+  valorPago         Decimal           @default(0) @db.Decimal(10, 2)
+  dataCriacao       DateTime          @default(now())
+  
+  // Legacy column maintained to avoid data loss
+  relatorioLegacy   String?           @map("relatorio") @db.Text
+  
+  // New normalized relation
+  relatorioAtividade RelatorioAtividade?
+  
+  cuidador          CuidadorDetalhes? @relation(fields: [cuidadorId], references: [id])
+  paciente          Paciente          @relation(fields: [pacienteId], references: [id])
+  pagamento         Pagamento?
+
+  @@map("plantoes")
+}
+
+model RelatorioAtividade {
+  id              String   @id @default(uuid())
+  plantaoId       String   @unique
+  descricao       String   @db.Text
+  medicacoes      String?  @db.Text
+  pressaoArterial String?
+  observacoes     String?  @db.Text
+  criadoEm        DateTime @default(now())
+  
+  plantao         Plantao  @relation(fields: [plantaoId], references: [id], onDelete: Cascade)
+
+  @@map("relatorios_atividade")
+}
+
+model Pagamento {
+  id                String           @id @default(uuid())
+  plantaoId         String           @unique
+  cuidadorId        String
+  valorBruto        Decimal          @db.Decimal(10, 2)
+  valorLiquido      Decimal          @db.Decimal(10, 2)
+  taxaPlataforma    Decimal          @db.Decimal(10, 2)
+  status            PagamentoStatus  @default(PENDENTE)
+  metodoPagamento   MetodoPagamento  @default(PIX)
+  dataPagamento     DateTime?
+  numeroComprovante String?
+  mpPaymentId       String?          // Mercado Pago external payment ID
+  mpQrCode          String?          // Pix QR code string
+  mpQrCodeBase64    String?          // Pix QR code image (base64)
+  mpTicketUrl       String?          // Pix payment URL
+  criadoEm          DateTime         @default(now())
+  atualizadoEm      DateTime         @updatedAt
+  
+  plantao           Plantao          @relation(fields: [plantaoId], references: [id])
+  cuidador          CuidadorDetalhes @relation(fields: [cuidadorId], references: [id])
+
+  @@map("pagamentos")
+}
+
 enum UserRole {
   ADMIN
   CUIDADOR
@@ -29,81 +212,15 @@ enum PlantaoStatus {
   REJEITADO
 }
 
-model User {
-  id             String           @id @default(uuid())
-  tipo           UserRole
-  nome           String
-  email          String           @unique
-  senha          String
-  telefone       String?
-  cpf            String           @unique
-  status         UserStatus       @default(PENDENTE)
-  dataCadastro   DateTime         @default(now())
-  
-  // Relations
-  cuidador       CuidadorDetalhes?
-  familiares     FamiliarVinculo[]
-
-  @@map("users")
+enum PagamentoStatus {
+  PENDENTE
+  PROCESSADO
+  PAID
 }
 
-model CuidadorDetalhes {
-  id              String   @id @default(uuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  documentos      Json?    // Array of {tipo, url}
-  dadosBancarios  Json?    // {banco, agencia, conta}
-  mercadoPago     String?
-  especialidades  String[]
-  
-  plantoes        Plantao[]
-
-  @@map("cuidador_detalhes")
+enum MetodoPagamento {
+  PIX
+  TRANSFERENCIA
+  MERCADO_PAGO
 }
 
-model Paciente {
-  id              String         @id @default(uuid())
-  nome            String
-  dataNascimento  DateTime
-  necessidades    String?        @db.Text
-  status          PacienteStatus @default(ATIVO)
-  dataCadastro    DateTime       @default(now())
-  
-  familiares      FamiliarVinculo[]
-  plantoes        Plantao[]
-
-  @@map("pacientes")
-}
-
-model FamiliarVinculo {
-  id                      String   @id @default(uuid())
-  userId                  String
-  pacienteId              String
-  parentesco              String   // 'Filho(a)', 'Cônjuge', etc.
-  isResponsavelFinanceiro Boolean  @default(false)
-  
-  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  paciente                Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, pacienteId])
-  @@map("familiar_vinculos")
-}
-
-model Plantao {
-  id                String        @id @default(uuid())
-  cuidadorId        String
-  pacienteId        String
-  dataInicio        DateTime
-  dataFim           DateTime
-  horasTrabalhadas  Float
-  relatorio         String?       @db.Text
-  status            PlantaoStatus @default(PENDENTE)
-  valorPago         Decimal       @default(0) @db.Decimal(10, 2)
-  dataCriacao       DateTime      @default(now())
-  
-  cuidador          CuidadorDetalhes @relation(fields: [cuidadorId], references: [id])
-  paciente          Paciente         @relation(fields: [pacienteId], references: [id])
-
-  @@map("plantoes")
-}
