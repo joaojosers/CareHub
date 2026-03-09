@@ -1,4 +1,4 @@
-# CareHub - Sistema de Gestão de Cuidadores e Pacientes
+# CareHub - Aplicação Fullstack (API Backend & Frontend UI)
 
 ![CI](https://github.com/joaojosers/CareHub/actions/workflows/ci.yml/badge.svg?branch=dev)
 ![Tests](https://img.shields.io/badge/tests-39%20passing-brightgreen)
@@ -7,9 +7,11 @@
 ![Prisma](https://img.shields.io/badge/Prisma-7-blue)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 
-## 📋 Visão Geral
+## 📋 Visão Geral do Monorepo
 
-CareHub é uma aplicação web moderna full-stack desenvolvida para PMEs que prestam serviços de acompanhamento e cuidado de pacientes, revolucionando processos antigos em planilhas com uma arquitetura digital completa.
+CareHub é uma aplicação web moderna full-stack desenvolvida para PMEs que prestam serviços de acompanhamento e cuidado de pacientes, revolucionando processos antigos em planilhas com uma arquitetura digital completa. 
+
+> **Aviso Importante**: Embora a organização do projeto possa levar o nome de "CareHub API", este repositório **é um Monorepo** e contém tanto o código oficial do Servidor (Backend NestJS) quanto o código do Cliente/Painel Web (Frontend React/Vite) integrados no mesmo ambiente Docker.
 
 ## 🎯 Objetivos do Projeto (Atingidos 🚀)
 
