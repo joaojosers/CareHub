@@ -5,200 +5,101 @@
 ![Node](https://img.shields.io/badge/node-22.x-green)
 ![NestJS](https://img.shields.io/badge/NestJS-11-red)
 ![Prisma](https://img.shields.io/badge/Prisma-7-blue)
+![React](https://img.shields.io/badge/React-19-61dafb)
 
 ## 📋 Visão Geral
 
-CareHub é uma aplicação web moderna desenvolvida para PMEs que prestam serviços de acompanhamento e cuidado de pacientes. O sistema substitui processos manuais realizados em planilhas Excel e grupos de WhatsApp por uma solução integrada e profissional.
+CareHub é uma aplicação web moderna full-stack desenvolvida para PMEs que prestam serviços de acompanhamento e cuidado de pacientes, revolucionando processos antigos em planilhas com uma arquitetura digital completa.
 
-## 🎯 Objetivos do Projeto
+## 🎯 Objetivos do Projeto (Atingidos 🚀)
 
-- **Digitalizar processos**: Substituir planilhas Excel e WhatsApp por um sistema centralizado
-- **Gestão de pessoas**: Cadastro e gerenciamento de cuidadores e pacientes
-- **Controle de horas**: Registro e aprovação de plantões com cálculo automático de horas
-- **Pagamentos**: Relatórios detalhados para processamento de pagamentos mensais
-- **Métricas**: Dashboard com indicadores de gestão em tempo real
+- **Digitalizar processos**: Totalmente integrado via aplicação Web.
+- **Gestão de pessoas**: CRUD completo com aprovação e RBAC.
+- **Controle de horas**: Registro e histórico de plantões.
+- **Pagamentos**: Geração e fechamento relatorial.
+- **Métricas**: Dashboards interativos.
 
-## ✨ Funcionalidades Principais
+## 🚀 Tecnologias Utilizadas (Production-ready)
 
-### 1. Gestão de Usuários
-- ✅ Auto-cadastro de cuidadores
-- ✅ Cadastro de pacientes
-- ✅ Sistema de aprovação de documentos
-- ✅ Três níveis de acesso: Administrador, Cuidador, Familiar
+- **Frontend**: Vite, React 19, Tailwind CSS, Autenticação de Tokens
+- **Backend**: NestJS, TypeScript, Prisma ORM (Compilação ultra-otimizada)
+- **Banco de Dados**: PostgreSQL
+- **Integração de Pagamento**: Mercado Pago
+- **Infraestrutura e Deploy**: Docker Multi-stage, Nginx, e Ubuntu Server na Oracle Cloud Infrastructure (OCI)
 
-### 2. Gestão de Plantões
-- ✅ Registro de plantões com data/hora início e fim
-- ✅ Cálculo automático de horas trabalhadas
-- ✅ Relatórios de atividades por plantão
-- ✅ Sistema de aprovação de plantões
+## 📦 Arquitetura do Repositório (Monorepo)
 
-### 3. Controle Financeiro
-- ✅ Relatórios de horas por cuidador
-- ✅ Cálculo automático de valores a pagar
-- ✅ Filtros por período (mensal)
-- ✅ Preparado para integração com gateway de pagamento
-
-### 4. Dashboard e Métricas
-- ✅ Total de cuidadores ativos
-- ✅ Total de pacientes ativos
-- ✅ Horas trabalhadas no mês
-- ✅ Pagamentos pendentes
-- ✅ Listagem de plantões recentes
-
-## 🚀 Tecnologias Utilizadas
-
-O CareHub está sendo migrado de uma versão estática para uma arquitetura profissional moderna:
-
-- **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Shadcn/UI
-- **Backend**: NestJS, TypeScript
-- **Banco de Dados**: PostgreSQL com Prisma ORM
-- **Autenticação**: JWT (Role-Based Access Control)
-- **Design**: Visual Premium com Dark Mode e Fluid Design
-
-## 📦 Estrutura do Projeto (Monorepo)
-
-```
+```text
 CareHub/
-├── frontend/               # Aplicação Next.js 15 profissional
-├── backend/                # API NestJS com Prisma
-├── versao-estatica/        # Versão MVP original (HTML/JS)
-├── DOCUMENTO_TECNICO.md    # Especificações técnicas detalhadas
-├── README.md               # Este arquivo
-├── GUIA_RAPIDO.md          # Guia de uso por perfil
-└── .gitignore              # Configurações de ignorar git
+├── frontend/               # SPA Vite/React (Empacotado via Nginx em Produção)
+├── backend/                # API NestJS + PostgreSQL
+├── docker-compose.yml      # Orquestrador oficial do ambiente OCI
+├── DOCUMENTO_TECNICO.md    # Especificações de Arquitetura e Negócios
+└── README.md               # Este arquivo de documentação oficial
 ```
 
-## 🔗 Repositório GitHub
+## 🏗️ Ambiente de Produção & Deploy Oficial (OCI)
 
-Este projeto está disponível no GitHub:
-- **URL**: [https://github.com/joajosers/CareHub](https://github.com/joajosers/CareHub)
-- **Clone**: `git clone https://github.com/joajosers/CareHub.git`
+O aplicativo foi comissionado, construído e estabilizado em Containers na **Oracle Cloud**.
 
-## 🎨 Design e UX
+Para reiniciar ou re-publicar os serviços de produção, os comandos oficiais do mantenedor são:
 
-O sistema foi desenvolvido com foco em:
-- **Visual Premium**: Gradientes vibrantes, dark mode, glassmorphism
-- **Animações Suaves**: Transições e micro-interações
-- **Responsividade**: Funciona perfeitamente em desktop, tablet e mobile
-- **Acessibilidade**: Estrutura semântica e contraste adequado
+```bash
+git checkout -f dev
+git pull origin dev
+docker compose up -d --build
+```
+> O Frontend ficará exposto globalmente na porta `80` por Nginx, e a API na porta `3000`.
 
-## 🔐 Credenciais de Demonstração
+## 🔐 Credenciais Oficiais do Ambiente
 
-Para testar o sistema, use as seguintes credenciais:
-
-**Administrador:**
+**Administrador Global:**
 - Email: `admin@carehub.com`
 - Senha: `admin123`
-- Tipo: Administrador
 
-**Dados de Demonstração:**
-- 3 cuidadores pré-cadastrados
-- 3 pacientes pré-cadastrados
-- 5 plantões de exemplo
-
-## 💻 Como Executar
-
-### Versão Profissional (Desenvolvimento)
+*Para a inicialização dessas sementes em servidor novo, basta invadir o container API:*
 ```bash
-# Frontend
-cd frontend
-npm install
-npm run dev
-
-# Backend
-cd backend
-npm install
-npm run start:dev
+docker exec -it carehub-backend node dist/prisma/seed.js
 ```
 
-### Versão Estática (Legado/Demonstração)
-1. Navegue até a pasta `versao-estatica/`
-2. Abra o arquivo `index.html` em um navegador moderno
+## 🔮 Cronograma de Desenvolvimento (Roadmap Concluído ✅)
 
-## 📱 Funcionalidades por Tipo de Usuário
+Todas as metas propostas no ciclo inicial do MVP foram executadas com sucesso:
 
-### Administrador
-- ✅ Visualizar dashboard completo
-- ✅ Gerenciar cuidadores (CRUD)
-- ✅ Gerenciar pacientes (CRUD)
-- ✅ Aprovar/rejeitar plantões
-- ✅ Gerar relatórios de pagamento
-- ✅ Processar pagamentos
+### Fase 1 - Core & Auth (Finalizado)
+- [x] Sistema de autenticação profissional (JWT/RBAC)
+- [x] CRUD de cuidadores e pacientes no banco de dados
+- [x] Configuração centralizada
+- [x] Dashboard administrativo
 
-### Cuidador
-- ✅ Registrar plantões
-- ✅ Adicionar relatórios de atividades
-- ✅ Visualizar histórico de plantões
-- ✅ Consultar pagamentos
+### Fase 2 - Recursos Avançados (Finalizado)
+- [x] Gestão e aprovação robusta
+- [x] Views exclusivas para **Familiares** e **Cuidadores**
+- [x] Relatórios e Views Dinâmicas.
+- [x] Validações de negócio complexas e testes unitários
 
-### Familiar
-- ✅ Visualizar informações do paciente
-- ✅ Consultar relatórios de plantões
-- ✅ Acompanhar atividades
+### Fase 3 - Pagamentos & Integração (Finalizado)
+- [x] Integração implementada em serviço Mock para o Gateway Mercado Pago.
+- [x] Webhook de notificação capturada
+- [x] Controle por turnos
 
-## 🔄 Fluxo de Trabalho
+### Fase 4 - Otimização, Docker & Deploy (Finalizado)
+- [x] Empacotamento Multi-stage para Backend e Frontend
+- [x] Deploy blindado por Security Lists na Nuvem Pública 
+- [x] Correções avançadas de Entrypoints e Network/CORS
 
-1. **Cadastro**: Cuidador se cadastra no sistema
-2. **Aprovação**: Administrador aprova o cadastro
-3. **Registro**: Cuidador registra plantões realizados
-4. **Aprovação**: Administrador aprova plantões
-5. **Pagamento**: Sistema gera relatório mensal para pagamento
-6. **Processamento**: Pagamentos são processados via gateway
+## 👨‍💻 Roadmap de Desenvolvimento Alternativo (Local)
 
-## 📊 Métricas e Relatórios
+Caso necessite rodar em máquina avulsa de desenvolvedor sem Docker Compose:
 
-O sistema oferece:
-- Total de horas trabalhadas por período
-- Custo total por cuidador
-- Número de plantões por paciente
-- Taxa de aprovação de plantões
-- Projeções de gastos mensais
+```bash
+# Frontend
+cd frontend && npm install && npm run dev
 
-## 🔮 Cronograma de Desenvolvimento (Roadmap)
-
-Conforme o `DOCUMENTO_TECNICO.md`, o projeto segue um ciclo de 4 semanas para o MVP:
-
-### Fase 1 - Core & Auth (Semana 1)
-- [ ] Sistema de autenticação profissional (NextAuth/JWT)
-- [ ] CRUD de cuidadores e pacientes no banco de dados
-- [ ] Registro básico de plantões e cálculo de horas
-- [ ] Dashboard administrativo inicial
-
-### Fase 2 - Recursos Avançados (Semana 2)
-- [ ] Sistema de gestão e aprovação de documentos
-- [ ] Módulo exclusivo de consulta para **Familiares** (Leitura)
-- [ ] Relatórios detalhados e notificações
-- [ ] Validações de negócio complexas
-
-### Fase 3 - Pagamentos & Integração (Semana 3)
-- [ ] Integração real com Gateway de Pagamento (Mercado Pago/Stripe)
-- [ ] Histórico financeiro e comprovantes automáticos
-- [ ] Fluxo de fechamento mensal
-
-### Fase 4 - Otimização & Polimento (Semana 4)
-- [ ] Otimizações de performance e SEO
-- [ ] Testes de segurança e carga
-- [ ] Refinamento da UI/UX Premium
-
-## 🛠️ Migração para Produção
-
-Para usar em produção, recomenda-se:
-
-1. **Backend**: Implementar API REST (Node.js/Express ou Python/FastAPI)
-2. **Banco de Dados**: Migrar para PostgreSQL ou MongoDB
-3. **Autenticação**: Implementar JWT com refresh tokens
-4. **Hospedagem**: Deploy em serviços como Vercel, Netlify ou AWS
-5. **Gateway de Pagamento**: Integrar Mercado Pago ou Stripe
-6. **Segurança**: HTTPS, CORS, rate limiting, validação de dados
+# Backend
+cd backend && npm install && npm run start:dev
+```
 
 ## 📄 Licença
+Inteiramente versionado, testado e publicado. MVP para simulação laboral profissional concluído com excelência e engenharia de software de ponta.
 
-Este projeto foi desenvolvido como MVP para simulação laboral.
-
-## 👥 Suporte
-
-Para dúvidas ou sugestões sobre o sistema, entre em contato com a equipe de desenvolvimento.
-
----
-
-**Desenvolvido com ❤️ para modernizar a gestão de cuidados de saúde**
